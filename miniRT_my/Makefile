@@ -2,7 +2,12 @@ NAME			:= minirt
 
 CC				:= cc
 CFLAGS			:= -Wall -Wextra -Werror
-MFLAGS			:= -Lmlx_mac -lmlx -framework OpenGL -framework AppKit #-lX11 -lXext
+# 1 FOR MAC
+# MFLAGS			:= -Lmlx_mac -lmlx -framework OpenGL -framework AppKit #-lX11 -lXext
+# 2 FOR LINUX  
+MFLAGS = -lm -g3 -fsanitize=address -Lmlx_linux -lmlx_Linux -L/usr/lib -Imlx_linux -lXext -lX11 -lm -lz
+
+
 PARSE			:=	parse/parser.c parse/errs.c parse/garbage.c
 RAYTRCING		:=	Raytracing/raytracing.c
 GNL				:=	gnl/get_next_line.c gnl/get_next_line_utils.c

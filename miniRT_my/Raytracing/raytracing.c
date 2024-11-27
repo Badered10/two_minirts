@@ -24,6 +24,12 @@ void	my_mlx_pixel_put(t_img *img, int x, int y, int color)
 	*(unsigned int*)dst = color;
 }
 
+int close_win(t_rt *rt)
+{
+    (void)rt;
+    exit(1);
+}
+
 
 int	key_hook(int keycode, t_rt *rt)
 {
@@ -45,7 +51,7 @@ int	key_hook(int keycode, t_rt *rt)
     {
         ;
     }
-    else if (keycode == 53)
+    else if (keycode == 65307)
     {
         exit (0);
     }
@@ -84,5 +90,6 @@ int main()
     }
     mlx_put_image_to_window(rt.mini.mlx, rt.mini.window, rt.mini.img.img, 0, 0);
     mlx_key_hook(rt.mini.window, &key_hook, &rt);
+    mlx_hook(rt.mini.window, 17, 0, &close_win, &rt);
     mlx_loop(rt.mini.mlx);
 }
