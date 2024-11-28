@@ -8,11 +8,12 @@ CFLAGS			:= -Wall -Wextra -Werror
 MFLAGS = -lm -g3 -fsanitize=address -Lmlx_linux -lmlx_Linux -L/usr/lib -Imlx_linux -lXext -lX11 -lm -lz
 
 
+VEC3			:= vec3/vec3.c
 PARSE			:=	parse/parser.c parse/errs.c parse/garbage.c
-RAYTRCING		:=	Raytracing/raytracing.c
+RAYTRCING		:=	raytracing/raytracing.c
 GNL				:=	gnl/get_next_line.c gnl/get_next_line_utils.c
 
-SRCS 			:= $(GNL) $(PARSE) $(RAYTRCING)
+SRCS 			:= $(GNL) $(PARSE) $(RAYTRCING) $(VEC3)
 				
 LIBFT_PATH		:=	libft/
 LIBFT			:=	libft/libft.a
