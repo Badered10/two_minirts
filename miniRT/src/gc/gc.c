@@ -1,4 +1,4 @@
-#include "main.h"
+#include "../../includes/main.h"
 
 gc_t **local_gc()
 {

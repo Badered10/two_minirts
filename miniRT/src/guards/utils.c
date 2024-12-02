@@ -1,7 +1,6 @@
-#include "main.h"
+#include "../../includes/main.h"
 
-int
-split_len(char **split)
+int split_len(char **split)
 {
     int i;
 
@@ -13,8 +12,7 @@ split_len(char **split)
     return i;
 }
 
-double
-double_guard(char *arg, int line, double min, double max)
+double double_guard(char *arg, int line, double min, double max)
 {
     double   left;
     double   right;

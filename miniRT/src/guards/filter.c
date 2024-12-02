@@ -1,4 +1,4 @@
-#include "main.h"
+#include "../../includes/main.h"
 
 double  dist(space_point_t *p1, space_point_t *p2)
 {

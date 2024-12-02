@@ -1,4 +1,4 @@
-#include "main.h"
+#include "../../includes/main.h"
 
 #ifdef __linux__
     enum e_keys

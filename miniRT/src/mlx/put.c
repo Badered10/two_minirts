@@ -1,4 +1,4 @@
-#include "main.h"
+#include "../../includes/main.h"
 
 void	put_pixel(int x, int y, int color)
 {

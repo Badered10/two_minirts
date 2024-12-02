@@ -1,4 +1,4 @@
-#include "main.h"
+#include "../../includes/main.h"
 
 space_point_t   point_guard(char *str, int line)
 {

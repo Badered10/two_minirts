@@ -1,4 +1,4 @@
-#include "main.h"
+#include "../../includes/main.h"
 
 /**
  * sp 0.0,0.0,20.6 12.6 10,0,255
@@ -7,8 +7,7 @@
  * diameter: 12.6
  * color: 10,0,255
 */
-sphere_t
-*sphere_guard(char **split, int line_count)
+sphere_t *sphere_guard(char **split, int line_count)
 {
     sphere_t *res;
 

@@ -1,4 +1,4 @@
-#include "main.h"
+#include "../../includes/main.h"
 
 /**
     * C -50.0,0,20 0,0,1 70
@@ -7,8 +7,7 @@
     ∗ x,y,z normalized orientation vector: 0, 0, 1
     ∗ field of view: 70 (in degrees)
  */
-camera_t
-*camera_guard(char **split, int line)
+camera_t *camera_guard(char **split, int line)
 {
     camera_t    *res;
     char        **pos;

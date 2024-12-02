@@ -1,4 +1,4 @@
-#include "tools.h"
+#include "../../includes/tools.h"
 
 // color_t extract_color(char *line)
 // {

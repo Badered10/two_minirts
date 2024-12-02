@@ -1,6 +1,7 @@
 #ifndef GUARDS_H
 #define GUARDS_H
 
+#include "tools.h"
 // utils
 int             split_len(char **split);
 double           double_guard(char *arg, int line, double min, double max);

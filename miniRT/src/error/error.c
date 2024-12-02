@@ -1,4 +1,4 @@
-#include "main.h"
+#include "../../includes/main.h"
 
 void    throw_error(char *msg, int line, char *add)
 {

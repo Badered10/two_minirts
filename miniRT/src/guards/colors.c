@@ -1,4 +1,4 @@
-#include "main.h"
+#include "../../includes/main.h"
 
 color_t color_guard(char *color, int line)
 {

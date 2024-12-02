@@ -1,4 +1,4 @@
-#include "main.h"
+#include "../../includes/main.h"
 
 bool    is_valid_extension(char *filename)
 {

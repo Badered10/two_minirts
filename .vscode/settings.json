@@ -55,5 +55,16 @@
   "C_Cpp_Runner.useLeakSanitizer": false,
   "C_Cpp_Runner.showCompilationTime": false,
   "C_Cpp_Runner.useLinkTimeOptimization": false,
-  "C_Cpp_Runner.msvcSecureNoWarnings": false
+  "C_Cpp_Runner.msvcSecureNoWarnings": false,
+  "files.associations": {
+    "ray.h": "c",
+    "vec3.h": "c",
+    "main.h": "c",
+    "mlx.h": "c",
+    "get_next_line.h": "c",
+    "libft.h": "c",
+    "minirt.h": "c",
+    "unistd.h": "c",
+    "string.h": "c"
+  }
 }

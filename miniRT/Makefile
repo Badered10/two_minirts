@@ -4,8 +4,9 @@ NAME=miniRT
 SRC_DIR=src
 DEBUG=1
 
-# 1 FOR LINUX #   MLX = mlx_linux/libmlx_Linux.a
-MLX = mlx_mac/libmlx.a
+# 1 FOR LINUX #   
+MLX = mlx_linux/libmlx_Linux.a
+# MLX = mlx_mac/libmlx.a
 
 ACTIONS	=	$(SRC_DIR)/actions/colors.c
 
@@ -36,8 +37,9 @@ ERROR	=	$(SRC_DIR)/error/error.c
 MAIN	=	$(SRC_DIR)/main.c
 
 CFLAGS = -Wall -Wextra -Werror -I/usr/include  -O3
-# 2 FOR LINUX # LDFLAGS = -lm -g3 -fsanitize=address -Lmlx_linux -lmlx_Linux -L/usr/lib -Imlx_linux -lXext -lX11 -lm -lz
-LDFLAGS = -lm -g3 -fsanitize=address -Lmlx_mac  -Imlx_mac -Lmlx  -framework OpenGL -framework AppKit
+# 2 FOR LINUX # 
+LDFLAGS = -lm -g3 -fsanitize=address -Lmlx_linux -lmlx_Linux -L/usr/lib -Imlx_linux -lXext -lX11 -lm -lz
+# LDFLAGS = -lm -g3 -fsanitize=address -Lmlx_mac  -Imlx_mac -Lmlx  -framework OpenGL -framework AppKit
 
 SRC = $(ACTIONS) $(GC) $(GUARDS) $(MAP) $(ERROR) $(MAIN) $(MLX_SRC)
 OBJ = $(SRC:.c=.o)
@@ -65,8 +67,9 @@ $(GNL):
 
 $(MLX):
 	@echo "Compiling mlx..."
-	@make -C mlx_mac
-	# 3 FOR LINUX # @make -C mlx_linux
+	# @make -C mlx_mac
+	# 3 FOR LINUX # 
+	@make -C mlx_linux
 
 clean:
 	@echo "Cleaning object files..."

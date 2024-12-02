@@ -1,4 +1,5 @@
 #include "../parse/minirt.h"
+#include "../ray/ray.h"
 
 #define DEF 0x0303fc
 #define UP 1
@@ -72,7 +73,7 @@ int add_gradient(int x , int y)
     return ((scaled_y << 16) | (scaled_x << 8));
 }
 
-void draw_scene(t_rt *rt)
+void insert_scene(t_rt *rt)
 {
     int x;
     int y;
@@ -90,13 +91,51 @@ void draw_scene(t_rt *rt)
     }
 }
 
-void draw_cercle(t_rt *rt, int a, int b, int r, int color)
+void insert_cercle(t_rt *rt, int a, int b, int r, int color)
 {
     int x; // x coord of circle
     int y; // y coord of circle
     int dist; // distance between center of circle and point
 
     // (x - a)² + (y - b)² = r²
+
+    // a is the x coord of the center of the circle
+    // b is the y coord of the center of the circle
+    // r is the radius of the circle
+
+    x = 0;
+    while (x < WIDTH)
+    {
+        y = 0;
+        while (y < HEIGHT)
+        {
+            dist = (x - a) * (x - a) + (y - b) * (y - b);
+            if (dist <= r * r)
+                my_mlx_pixel_put(&rt->mini.img, x, y, color);
+            y++;
+        }
+        x++;
+    }
+}
+
+void insert_sphere(t_rt *rt, int a, int b, int r, int color)
+{
+    int x; // x coord of circle
+    int y; // y coord of circle
+    int dist; // distance between center of circle and point
+
+    // cercle equation : (x)² + (y)² = r² , while  center coords is (0, 0)
+    // vector equation is : a + tb .
+
+    // ax + tb = x
+    // ay + tb = y
+
+    // (ax + tb)² + (ay + tb)² = r² 
+    // -> a²x² + 2abxt + t²b² + a²y² + 2abyt + t²b² = r²
+    // -> (a² + b²)t² + 2ab(x + y)t + a²x² + a²y² - r² = 0
+    
+    // let's solve for t: 
+    // t = (-b ± √(b² - 4ac)) / 2a
 
     // a is the x coord of the center of the circle
     // b is the y coord of the center of the circle
@@ -149,8 +188,8 @@ int main()
         return (1);
     }
 
-    draw_scene(&rt);
-    draw_cercle(&rt, 400, 400, 100, 0x00ff00);
+    insert_scene(&rt);
+    insert_cercle(&rt, 400, 400, 100, 0x00ff00);
     mlx_put_image_to_window(rt.mini.mlx, rt.mini.window, rt.mini.img.img, 0, 0);
     mlx_key_hook(rt.mini.window, &key_hook, &rt);
     mlx_hook(rt.mini.window, 17, 0, &close_win, &rt);
