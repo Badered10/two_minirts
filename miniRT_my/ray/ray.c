@@ -6,7 +6,7 @@
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/27 16:03:04 by baouragh          #+#    #+#             */
-/*   Updated: 2024/11/27 16:05:11 by baouragh         ###   ########.fr       */
+/*   Updated: 2024/11/28 15:44:18 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,4 +20,9 @@ t_ray create_ray(t_point3 orig, t_vec3 dir)
     ray.dir = dir;
 
     return (ray);
+}
+
+t_vec3 ray_at(t_ray ray, double t)
+{
+    return (vec3_add(ray.orig, vec3_scale(ray.dir, t)));
 }

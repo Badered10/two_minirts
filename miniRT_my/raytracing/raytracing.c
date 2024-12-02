@@ -20,6 +20,8 @@ void	my_mlx_pixel_put(t_img *img, int x, int y, int color)
 {
 	char    *dst;
 
+    if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT)
+        return;
 	dst = img->addr + (y * img->line_length + x * (img->bits_per_pixel / 8));
 	*(unsigned int*)dst = color;
 }
@@ -51,12 +53,70 @@ int	key_hook(int keycode, t_rt *rt)
     {
         ;
     }
-    else if (keycode == 65307)
+    else if (keycode == 65307) // ESC key
     {
+        mlx_destroy_window(rt->mini.mlx, rt->mini.window);
         exit (0);
     }
 	return (0);
 }
+
+int add_gradient(int x , int y)
+{
+    int scaled_y;
+    int scaled_x;
+
+    scaled_x = x * 255 / WIDTH;
+    scaled_y = y * 255 / HEIGHT;
+
+    return ((scaled_y << 16) | (scaled_x << 8));
+}
+
+void draw_scene(t_rt *rt)
+{
+    int x;
+    int y;
+
+    y = 0;
+    while (y < WIDTH)
+    {
+        x = 0;
+        while (x < HEIGHT)
+        {
+            my_mlx_pixel_put(&rt->mini.img, x , y, add_gradient(x, y));
+            x++;
+        }
+        y++;
+    }
+}
+
+void draw_cercle(t_rt *rt, int a, int b, int r, int color)
+{
+    int x; // x coord of circle
+    int y; // y coord of circle
+    int dist; // distance between center of circle and point
+
+    // (x - a)² + (y - b)² = r²
+
+    // a is the x coord of the center of the circle
+    // b is the y coord of the center of the circle
+    // r is the radius of the circle
+
+    x = 0;
+    while (x < WIDTH)
+    {
+        y = 0;
+        while (y < HEIGHT)
+        {
+            dist = (x - a) * (x - a) + (y - b) * (y - b);
+            if (dist <= r * r)
+                my_mlx_pixel_put(&rt->mini.img, x, y, color);
+            y++;
+        }
+        x++;
+    }
+}
+
 
 int main()
 {
@@ -88,6 +148,9 @@ int main()
         perror("mlx_get_address failed");
         return (1);
     }
+
+    draw_scene(&rt);
+    draw_cercle(&rt, 400, 400, 100, 0x00ff00);
     mlx_put_image_to_window(rt.mini.mlx, rt.mini.window, rt.mini.img.img, 0, 0);
     mlx_key_hook(rt.mini.window, &key_hook, &rt);
     mlx_hook(rt.mini.window, 17, 0, &close_win, &rt);
