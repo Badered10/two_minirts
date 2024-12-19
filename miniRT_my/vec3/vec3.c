@@ -6,7 +6,7 @@
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/27 15:34:28 by baouragh          #+#    #+#             */
-/*   Updated: 2024/11/27 15:34:40 by baouragh         ###   ########.fr       */
+/*   Updated: 2024/12/19 15:41:01 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,4 +101,9 @@ double vec3_length(t_vec3 a)
 t_vec3 vec3_unit(t_vec3 a)
 {
     return (vec3_scale(a, 1 / vec3_length(a)));
+}
+
+t_point3 create_point3(double x, double y, double z)
+{
+    return ((t_point3)vec3(x, y, z));
 }

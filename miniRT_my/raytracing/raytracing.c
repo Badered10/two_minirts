@@ -1,12 +1,13 @@
 #include "../parse/minirt.h"
 #include "../ray/ray.h"
 
+
 #define DEF 0x0303fc
 #define UP 1
 #define DOWN 2
 #define LEFT 3
 #define RIGHT 4
-#define WIDTH 800
+#define WIDTH 400
 #define HEIGHT 800
 
 int check_color (t_img *img, int x, int y, int color)
@@ -118,49 +119,97 @@ void insert_cercle(t_rt *rt, int a, int b, int r, int color)
     }
 }
 
-void insert_sphere(t_rt *rt, int a, int b, int r, int color)
+void insert_sphere(t_rt *rt, int x, int y, int color)
 {
-    int x; // x coord of circle
-    int y; // y coord of circle
+    t_vec3 ray_origin;
+    t_vec3 ray_direction;
+    double r = 0.5; // radius of the sphere
     int dist; // distance between center of circle and point
 
-    // cercle equation : (x)² + (y)² = r² , while  center coords is (0, 0)
+    // cercle equation : (X)² + (Y)² - r² = 0 , while  center coords is (0, 0)
     // vector equation is : a + tb .
 
-    // ax + tb = x
-    // ay + tb = y
+    // ax + bxt = X
+    // ay + bxt = Y
 
-    // (ax + tb)² + (ay + tb)² = r² 
-    // -> a²x² + 2abxt + t²b² + a²y² + 2abyt + t²b² = r²
-    // -> (a² + b²)t² + 2ab(x + y)t + a²x² + a²y² - r² = 0
+    // (ax + bxt)² + (ay + byt)² - r² = 0
+    // ax² + 2axbxt + bx²t² + ay² + 2aybyt + by²t² - r² = 0
+    // (bx² + by²)t² + (2(axbx + ayby))t + (ax² + ay² - r²) = 0
     
     // let's solve for t: 
     // t = (-b ± √(b² - 4ac)) / 2a
 
-    // a is the x coord of the center of the circle
-    // b is the y coord of the center of the circle
-    // r is the radius of the circle
+    // a is ray origin
+    // b is ray direction
+    // r is the radius of the sphere
+    // t is hit distance
 
-    x = 0;
-    while (x < WIDTH)
-    {
-        y = 0;
-        while (y < HEIGHT)
-        {
-            dist = (x - a) * (x - a) + (y - b) * (y - b);
-            if (dist <= r * r)
-                my_mlx_pixel_put(&rt->mini.img, x, y, color);
-            y++;
-        }
-        x++;
-    }
+    double a = vec3_dot(ray_direction , ray_direction);
+    double b = 2 * vec3_dot(ray_direction, ray_origin);
+    double c = vec3_dot(ray_origin, ray_origin) - r * r;
+
+
+    // x = 0;
+    // while (x < WIDTH)
+    // {
+    //     y = 0;
+    //     while (y < HEIGHT)
+    //     {
+    //         dist = (x - a) * (x - a) + (y - b) * (y - b);
+    //         if (dist <= r * r)
+    //             my_mlx_pixel_put(&rt->mini.img, x, y, color);
+    //         y++;
+    //     }
+    //     x++;
+    // }
+
+
 }
 
 
 int main()
 {
     t_rt rt;
-    
+
+    float aspect_ratio;
+    int image_width;
+    int image_height;
+    float focal_length;
+    float viewport_height;
+    float viewport_width;
+    t_vec3 viewport_u;
+    t_vec3 viewport_v;
+    t_vec3 pixel_delta_u;
+    t_vec3 pixel_delta_v;
+    t_point3 camera_center;
+
+    // image 
+    image_width = WIDTH;
+    aspect_ratio = 16.0 / 9.0;
+
+    // Calculate the image height, and ensure that it's at least 1.
+    image_height = (int)(image_width / aspect_ratio);
+    if (image_height < 1)
+        image_height = 1;
+
+    // camera
+    focal_length = 1.0;
+    viewport_height = 2.0;
+    viewport_width = viewport_height * ((double)(image_width) / image_height);
+    camera_center = create_point3(0, 0, 0);
+
+    // Calculate the vectors across the horizontal and down the vertical viewport edges.
+    viewport_u = vec3(viewport_width, 0, 0);
+    viewport_v = vec3(0, -viewport_height, 0);
+
+    // Calculate the horizontal and vertical delta vectors from pixel to pixel.
+    // pixel_delta_u = viewport_u / image_width;
+    // pixel_delta_v = viewport_v / image_height;
+    pixel_delta_u = vec3_scale(viewport_u, 1.0 / image_width);
+    pixel_delta_v = vec3_scale(viewport_v, 1.0 / image_height);
+
+
+
     rt.mini.mlx = mlx_init();
     if (!rt.mini.mlx) {
         perror("mlx_init failed");

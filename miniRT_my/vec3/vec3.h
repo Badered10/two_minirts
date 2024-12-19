@@ -6,7 +6,7 @@
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/27 15:35:25 by baouragh          #+#    #+#             */
-/*   Updated: 2024/11/27 16:04:28 by baouragh         ###   ########.fr       */
+/*   Updated: 2024/12/19 15:41:40 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,5 +35,6 @@ double vec3_dot(t_vec3 a, t_vec3 b);
 t_vec3 vec3_cross(t_vec3 a, t_vec3 b);
 double vec3_length(t_vec3 a);
 t_vec3 vec3_unit(t_vec3 a);
+t_point3 create_point3(double x, double y, double z);
 
 #endif
