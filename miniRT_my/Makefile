@@ -11,9 +11,11 @@ MFLAGS = -lm -g3 -fsanitize=address -Lmlx_linux -lmlx_Linux -L/usr/lib -Imlx_lin
 VEC3			:= vec3/vec3.c
 PARSE			:=	parse/parser.c parse/errs.c parse/garbage.c
 RAYTRCING		:=	raytracing/raytracing.c
+COLOR			:=	color/color.c
+RAY				:=	ray/ray.c
 GNL				:=	gnl/get_next_line.c gnl/get_next_line_utils.c
 
-SRCS 			:= $(GNL) $(PARSE) $(RAYTRCING) $(VEC3)
+SRCS 			:= $(GNL) $(PARSE) $(RAYTRCING) $(VEC3) $(COLOR) $(RAY)
 				
 LIBFT_PATH		:=	libft/
 LIBFT			:=	libft/libft.a
