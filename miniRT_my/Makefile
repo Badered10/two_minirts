@@ -1,7 +1,7 @@
 NAME			:= minirt
 
 CC				:= cc
-CFLAGS			:= -Wall -Wextra -Werror
+CFLAGS			:= #-Wall -Wextra -Werror
 # 1 FOR MAC
 # MFLAGS			:= -Lmlx_mac -lmlx -framework OpenGL -framework AppKit #-lX11 -lXext
 # 2 FOR LINUX  

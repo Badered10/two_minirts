@@ -11,8 +11,8 @@
 #define DOWN 2
 #define LEFT 3
 #define RIGHT 4
-#define WIDTH 1200
-#define HEIGHT 800
+#define WIDTH 800
+#define HEIGHT (WIDTH * 9 / 16)
 
 int check_color (t_img *img, int x, int y, int color)
 {
@@ -25,9 +25,6 @@ int check_color (t_img *img, int x, int y, int color)
 void	my_mlx_pixel_put(t_img *img, int x, int y, int color)
 {
 	char    *dst;
-
-    if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT)
-    return ;
     
 	dst = img->addr + (y * img->line_length + x * (img->bits_per_pixel / 8));
 	*(unsigned int*)dst = color;
@@ -169,64 +166,57 @@ void insert_cercle(t_rt *rt, int a, int b, int r, int color)
 //     // }
 
 
-// }
-
-
 int main()
 {
-    t_rt rt;
+    t_rt        rt;
+    float       aspect_ratio;
+    int         image_height;
+    int         image_width;
+    float       focal_length;
+    float       viewport_height ;
+    float       viewport_width ;
+    t_point3    camera_center;
+    t_vec3      horizontal;
+    t_vec3      vertical;
+    t_vec3      lower_left_corner;
+    t_vec3      direction;
+    t_ray       r;
+    t_color     pixel_color;
+    t_vec3      viewport_u;
+    t_vec3      viewport_v;
+    t_vec3      pixel_delta_u;
+    t_vec3      pixel_delta_v;
+    t_vec3      pixel00_loc;
+    t_vec3      viewport_upper_left;
 
-    float aspect_ratio;
-    int image_width;
-    int image_height;
-    float focal_length;
-    float viewport_height;
-    float viewport_width;
-    t_vec3 viewport_u;
-    t_vec3 viewport_v;
-    t_vec3 pixel_delta_u;
-    t_vec3 pixel_delta_v;
-    t_vec3 viewport_upper_left;
-    t_vec3 pixel00_loc;
-    t_point3 camera_center;
-
-    // image 
-    image_width = WIDTH;
-    aspect_ratio = 16.0 / 9.0;
-
-    // Calculate the image height, and ensure that it's at least 1.
-    image_height = (int)(image_width / aspect_ratio);
-    if (image_height < 1)
-        image_height = 1;
-
-    // camera
-    focal_length = 1.0;
     viewport_height = 2.0;
-    viewport_width = viewport_height * ((double)(image_width) / image_height);
+    focal_length = 1.0;
+    aspect_ratio = 16.0 / 9.0;
+    viewport_width = viewport_height * aspect_ratio;
+    image_width = WIDTH;
+    image_height = (int)(image_width / aspect_ratio);
+    // printf("WIDTH:%d ,HEIGHT:%d\n\n", image_width, image_height);
     camera_center = create_point3(0, 0, 0);
+    horizontal = vec3(viewport_width, 0, 0);
+    vertical = vec3(0, viewport_height, 0);
+    lower_left_corner = vec3_sub(camera_center, vec3_add(vec3_add(vec3_scale(horizontal, 0.5), vec3_scale(vertical, 0.5)), vec3(0, 0, focal_length)));
 
-    // Calculate the vectors across the horizontal and down the vertical viewport edges.
+    // // Calculate the vectors across the horizontal and down the vertical viewport edges.
     viewport_u = vec3(viewport_width, 0, 0);
-    viewport_v = vec3(0, -viewport_height, 0);
+    viewport_v = vec3(0, viewport_height, 0);
 
-    // Calculate the horizontal and vertical delta vectors from pixel to pixel.
-    // pixel_delta_u = viewport_u / image_width;
-    // pixel_delta_v = viewport_v / image_height;
+    // // Calculate the horizontal and vertical delta vectors from pixel to pixel.
+
     pixel_delta_u = vec3_scale(viewport_u, 1.0 / image_width);
     pixel_delta_v = vec3_scale(viewport_v, 1.0 / image_height);
 
-    // Calculate the location of the upper left pixel.
-    // viewport_upper_left = camera_center - vec3(0, 0, focal_length) - viewport_u / 2 - viewport_v / 2;
-    // pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+    // // Calculate the location of the upper-left pixel in the viewport.
+    viewport_upper_left = vec3_sub(lower_left_corner, vec3_add(vec3_scale(viewport_u, 0.5), vec3_scale(viewport_v, 0.5)));
+    pixel00_loc = vec3_sub(viewport_upper_left, vec3_scale(pixel_delta_u, 0.5));
 
-    viewport_upper_left = vec3_sub(camera_center, vec3_add(vec3_scale(vec3(0, 0, focal_length), 1), vec3_scale(viewport_u, 0.5)));
-    pixel00_loc = vec3_add(viewport_upper_left, vec3_scale(vec3_add(pixel_delta_u, pixel_delta_v), 0.5));
-
-    // Render
-
-    printf("P3\n%d %d\n255\n", image_width, image_height);
     rt.mini.mlx = mlx_init();
-    if (!rt.mini.mlx) {
+    if (!rt.mini.mlx) 
+    {
         perror("mlx_init failed");
         return (1);
     }
@@ -241,38 +231,44 @@ int main()
     rt.mini.img.img = mlx_new_image(rt.mini.mlx, image_width, image_height);
     if (!rt.mini.img.img)
     {
-        perror("mlx_new image failed");
+        perror("mlx_new_image failed");
         return (1);
     }
 
     rt.mini.img.addr = mlx_get_data_addr(rt.mini.img.img, &rt.mini.img.bits_per_pixel, &rt.mini.img.line_length, &rt.mini.img.endian);
     if (!rt.mini.img.addr)
     {
-        perror("mlx_get_address failed");
+        perror("mlx_get_data_addr failed");
         return (1);
     }
 
-    for (int j = 0; j < image_height; j++) 
+    // Render
+    printf("WIDTH:%d ,HEIGHT:%d\n\n", image_width, image_height);
+    int j = 0;
+    for ( ;j < image_height; j++) 
     {
-        fprintf(stderr, "\rScanlines remaining: %d ", (image_height - j));
-        fflush(stderr);
+        dprintf(2, "\rScanlines remaining: %d \n", (image_height - j));
         for (int i = 0; i < image_width; i++) 
         {
-            t_vec3 pixel_center = vec3_add(pixel00_loc, vec3_add(vec3_scale(pixel_delta_u, i), vec3_scale(pixel_delta_v, j)));
-            t_vec3 ray_direction = vec3_sub(pixel_center, camera_center);
-            t_ray r = create_ray(camera_center, ray_direction);
-            t_color pixel_color;
+            // Calculate the direction of the ray from the camera to the pixel.
+            t_vec3 pixel_center;
+            t_vec3 direction;
+            int color;
+        
+            pixel_center = vec3_add(pixel00_loc, vec3_add(vec3_scale(pixel_delta_u, i), vec3_scale(pixel_delta_v, j)));
+            direction = vec3_sub(pixel_center, camera_center);
+            r = create_ray(camera_center, direction);
             pixel_color = ray_color(r);
-            int color = ((int)(255.999 * pixel_color.x) << 16) | ((int)(255.999 * pixel_color.y) << 8) | (int)(255.999 * pixel_color.z);
-            my_mlx_pixel_put(&rt.mini.img, i, image_height - j - 1, color);
-            // write_color(pixel_color);
+            // Set the pixel color in the MiniLibX image buffer
+            color = t_color_to_int(pixel_color);
+            my_mlx_pixel_put(&rt.mini.img, i,  j, color);
         }
     }
 
-    // insert_scene(&rt);
-    // insert_cercle(&rt, 400, 400, 100, 0x00ff00);
     mlx_put_image_to_window(rt.mini.mlx, rt.mini.window, rt.mini.img.img, 0, 0);
     mlx_key_hook(rt.mini.window, &key_hook, &rt);
     mlx_hook(rt.mini.window, 17, 0, &close_win, &rt);
     mlx_loop(rt.mini.mlx);
+
+    return 0;
 }
