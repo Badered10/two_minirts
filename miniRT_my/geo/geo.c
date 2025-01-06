@@ -21,7 +21,7 @@ void print_type(t_tuple *tuple)
 t_tuple *creat_tuple(double x, double y, double z, double w)
 {
     t_tuple *tuple;
-    tuple = (t_tuple *)malloc(sizeof(t_tuple));
+    tuple = malloc(sizeof(t_tuple));
     if (tuple == NULL)
         return (NULL);
 
@@ -119,7 +119,7 @@ t_tuple *hadamard_product(t_tuple *a, t_tuple *b)
 
 t_projectile *creat_projectile(t_tuple *position, t_tuple *speed)
 {
-    t_projectile *projectile = (t_projectile *)malloc(sizeof(t_projectile));
+    t_projectile *projectile = malloc(sizeof(t_projectile));
     if (projectile == NULL)
         return (NULL);
 
@@ -131,7 +131,7 @@ t_projectile *creat_projectile(t_tuple *position, t_tuple *speed)
 
 t_environment *creat_environment(t_tuple *gravity, t_tuple *wind)
 {
-    t_environment *environment = (t_environment *)malloc(sizeof(t_environment));
+    t_environment *environment = malloc(sizeof(t_environment));
     if (environment == NULL)
         return (NULL);
 
@@ -155,7 +155,7 @@ t_img *new_img( int width, int height, void *mlx)
 {
     t_img *img;
 
-    img = (t_img*)malloc(sizeof(t_img));
+    img = malloc(sizeof(t_img));
     if (!img)
         return (NULL);
     img->img = mlx_new_image(mlx, width, height);
@@ -171,7 +171,7 @@ t_canvas * creat_canvas(int width , int height, void *mlx_ptr)
 {
     t_canvas *canvas;
 
-    canvas = (t_canvas *)malloc(sizeof(t_canvas));
+    canvas = malloc(sizeof(t_canvas));
     if (!canvas)
         return (NULL);
     canvas->width = width;
@@ -258,41 +258,289 @@ t_tuple *pixel_at(t_canvas *canvas, int x, int y)
     return (int_to_color(color));
 }
 
+// MATRIXS INTO THE SCENE------------------------------------------------------------
+
+typedef struct s_matrix
+{
+    int rows_num;
+    int colums_num;
+    double **data;
+} t_matrix;
+
+void free_matrix(t_matrix *matrix)
+{
+    int i;
+
+    i = 0;
+    if (!matrix)
+        return;
+    while (i < matrix->rows_num)
+    {
+        free(matrix->data[i]);
+        i++;
+    }
+    free(matrix->data);
+    free(matrix);
+}
+
+void free_old(double **res, int i)
+{
+    if (!res)
+        return ;
+    while (i >= 0)
+    {
+        free(res[i]);
+        i--;
+    }
+    free(res);
+}
+
+double **set_zeros(int rows, int colums)
+{
+    int i;
+    int j;
+    double **res;
+
+    if (rows <= 0 || colums <= 0)
+        return (NULL);
+    res = malloc(rows * sizeof(double *));
+    if (!res)
+        return (NULL);
+    i = 0;
+    while (i < rows)
+    {
+        res[i] = malloc(colums * sizeof(double));
+        if (!res[i])
+            return (free_old(res, i - 1) ,NULL);
+        j = 0;
+        while(j < colums)
+        {
+            res[i][j] = 0.0;
+            j++;
+        }
+        i++;
+    }
+    return (res);
+}
+
+double **duplicate_array(int rows, int colums, const double *arr[])
+{
+    int i;
+    int j;
+    double **res;
+
+    if (!arr || !*arr || rows <= 0 || colums <= 0)
+        return (NULL);
+    res = malloc(rows * sizeof(double *));
+    if (!res)
+        return (NULL);
+    i = 0;
+    while (i < rows)
+    {
+        res[i] = malloc(colums * sizeof(double));
+        if (!res[i])
+            return (free_old(res, i - 1) ,NULL);
+        j = 0;
+        while(j < colums)
+        {
+            res[i][j] = arr[i][j];
+            j++;
+        }
+        i++;
+    }
+    return (res);
+}
+
+t_matrix *create_matrix(int rows, int colums, const double *arr[])
+{
+    t_matrix *matrix;
+
+    if (rows <= 0 || colums <= 0)
+        return (NULL);
+    matrix = malloc(sizeof(t_matrix));
+    if (!matrix)
+        return (NULL);
+    matrix->rows_num = rows;
+    matrix->colums_num = colums;
+    if (!arr || !*arr)
+    {
+        matrix->data = set_zeros(rows, colums);
+        if (!matrix->data)
+            return (free(matrix), NULL);
+        return (matrix);
+    }
+    matrix->data = duplicate_array(rows, colums, arr);
+    if (!matrix->data)
+        return (free(matrix), NULL);
+    return (matrix);
+}
+
+double matrix_at(t_matrix *m, int i, int j)
+{
+    if (i > m->rows_num || i < 0 || j > m->colums_num || j < 0)
+        return (printf("ERROR : MATRIX OUT OF RANGE\n"), -1);
+
+    return (m->data[i][j]);    
+}
+
+void print_matrix(t_matrix *m)
+{
+    int i;
+    int j;
+
+    i = 0;
+    while (i < m->rows_num)
+    {
+        j = 0;
+        while (j < m->colums_num)
+        {
+            printf("M[%d][%d] = %f ",i ,j ,matrix_at(m, i, j));
+            j++;
+        }
+        printf("\n");
+        i++;
+    }
+    printf("\n");
+}
+
+//MATRIX ARTHEMATIC ----------------------------------------------------------------------
+
+bool matrix_equal(t_matrix *m1, t_matrix *m2)
+{
+    int i;
+    int j;
+
+    if (!m1 || !m2 || !m1->data || !m2->data ||
+         m1->colums_num != m2->colums_num || m1->rows_num != m2->rows_num)
+        return (0);
+    i = 0;
+    while (i < m1->rows_num)
+    {
+        j = 0;
+        while (j < m1->colums_num)
+        {
+            if (!equal(matrix_at(m1, i, j), matrix_at(m2, i, j)))
+            {
+                printf("diff M1[%d][%d] = %f, M2[%d][%d] = %f\n",i,j,
+                    matrix_at(m1, i, j), i, j, matrix_at(m2, i, j));
+                return (0);
+            }
+            j++;
+        }
+        i++;
+    }
+    return (1);   
+}
+
+t_matrix *matrix_multiply(t_matrix *a, t_matrix *b, int size) // JUST FOR 4X4 matrixs 
+{
+    t_matrix *matrix;
+    int i;
+    int j;
+
+    if (!a || !b || !a->data || !b->data 
+        || a->colums_num != size || a->rows_num != size
+        || b->colums_num != size || b->rows_num != size)
+        return (0);
+    matrix = create_matrix(size, size, NULL);
+    if (!matrix)
+        return (NULL);
+    i = 0;
+    while (i < size)
+    {
+        j = 0;
+        while (j < size)
+        {
+            matrix->data[i][j] =  a->data[i][0] * b->data[0][j] 
+                                + a->data[i][1] * b->data[1][j] 
+                                + a->data[i][2] * b->data[2][j]
+                                + a->data[i][3] * b->data[3][j];
+            j++;
+        }
+        i++;
+    }
+    return (matrix);
+}
+
+
+// MAIN -----------------------------------------------------------------------
 
 int main()
 {
-    void *mlx;
-    void *win;
-    void *img;
-    t_canvas *canvas;
-    t_tuple  *red;
+    // t_projectile *projectile;
+    // t_environment *env;
+    // t_tuple *pose;
+    // t_tuple *speed;
+    // t_tuple *gravity;
+    // t_tuple *wind;
+    // void *mlx;
+    // void *win;
+    // void *img;
+    // t_canvas *canvas;
+    // t_tuple  *red;
 
-    mlx = mlx_init();
-    if (!mlx)
-        return(-1);
-    win = mlx_new_window(mlx, 1000, 500, "test");
-    if (!win)
-        return (-2);
-    canvas = creat_canvas(1000, 500, mlx);
-    if (!canvas)
-        return (-3);
-    red = creat_color(1, 1, 1);
-    write_pixel(canvas, 0, 0, red);
-    red = creat_color(1, 0, 1);
-    int x = 1;
-    while( x < 1000)
-    {
-        int y = 1;
-        while(y < 500)
-        {
-            write_pixel(canvas, x, y, red);
-            y++;
-        }
-        x++;
-    }
-    print_type(pixel_at(canvas, 0, 0));
-    print_type(pixel_at(canvas, 1, 1));
-    mlx_put_image_to_window(mlx, win, canvas->img->img, 0, 0);
-    mlx_loop(mlx);
+    // pose = creat_point(0, 1, 0);
+    // speed = creat_vector(1, 1.8, 0);
+    // gravity = creat_vector(0, -0.1, 0);
+    // wind = creat_vector(-0.01, 0, 0);
+    // env = creat_environment(gravity, wind);
+    // projectile = creat_projectile(pose, mul_tuple(norm_tuple(speed), 11.25));
+    // mlx = mlx_init();
+    // if (!mlx)
+    //     return(-1);
+    // win = mlx_new_window(mlx, 900, 550, "test");
+    // if (!win)
+    //     return (-2);
+    // canvas = creat_canvas(900, 550, mlx);
+    // if (!canvas)
+    //     return (-3);
     
+    // red = creat_color(1, 0, 0);
+
+    // while (projectile->position->y > 0)
+    // {
+    //     projectile = tick(env, projectile);
+    //     print_type(projectile->position);
+    //     if (projectile->position->y < 0 || projectile->position->x < 0)
+    //         break;
+    //     if (900 - projectile->position->x >= 0 && 550 - projectile->position->y >= 0)
+    //     {
+    //         write_pixel(canvas, 900 - projectile->position->x, 550 - projectile->position->y, red);
+    //         printf("%f, %f \n", 900 - projectile->position->x, 550 - projectile->position->y);
+    //     }
+    // }
+
+    // print_type(pixel_at(canvas, 0, 0));
+    // print_type(pixel_at(canvas, 1, 1));
+    // mlx_put_image_to_window(mlx, win, canvas->img->img, 0, 0);
+    // mlx_loop(mlx);
+    t_matrix *matrix1;
+    t_matrix *matrix2;
+    t_matrix *res;
+
+    double arr[4][4] = {{1,2,3,4}, {2,3,4,5}, {3,4,5,6}, {4,5,6,7}};
+    double arr2[4][4] = {{0,1,2,4}, {1,2,4,8}, {2,4,8,16}, {4,8,16,32}};
+
+    const double *input1[4] = {arr[0], arr[1], arr[2], arr[3]};
+    const double *input2[4] = {arr2[0], arr2[1], arr2[2], arr2[3]};
+
+    matrix1 = create_matrix(4, 4, input1);
+    if (!matrix1)
+        return (-2);
+    matrix2 = create_matrix(4, 4, input2);
+    if (!matrix2)
+        return (-2);
+    print_matrix(matrix1);
+    print_matrix(matrix2);
+    // if (matrix_equal(matrix1, matrix2))
+        // printf("MATRIX 1 and MATRIX 2 Are equal! \n");
+    // else
+        // printf("MATRIX 1 and MATRIX 2 Are not equal! \n");
+    res = matrix_multiply(matrix1, matrix2, 4);
+    print_matrix(res);
+    free_matrix(matrix1);
+    free_matrix(matrix2);
+    free_matrix(res);
+    return 0;
+
 }
