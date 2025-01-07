@@ -115,7 +115,8 @@ t_tuple *hadamard_product(t_tuple *a, t_tuple *b)
 {
     return (creat_color(a->x * b->x, a->y * b->y, a->z * b->z));
 }
-// MAIN FUNCTION--------------------------------------------------------------------------------
+
+// PROJECTILE FUNCS--------------------------------------------------------------------------
 
 t_projectile *creat_projectile(t_tuple *position, t_tuple *speed)
 {
@@ -462,6 +463,107 @@ t_matrix *matrix_multiply(t_matrix *a, t_matrix *b, int size) // JUST FOR 4X4 ma
     return (matrix);
 }
 
+t_tuple *matrix_tuple_mul4x4(t_matrix *a, t_tuple *t) // JUST FOR 4X4 matrixs 
+{
+    t_tuple *tuple;
+    int i;
+    double res;
+
+    if (!a || !t || !a->data || a->colums_num != 4 || a->rows_num != 4)
+        return (0);
+    tuple = creat_tuple(0, 0, 0, 0);
+    i = 0;
+    while (i < 4)
+    {
+        res =   a->data[i][0] * t->x 
+                + a->data[i][1] * t->y 
+                + a->data[i][2] * t->z
+                + a->data[i][3] * t->w;
+        if (i == 0)
+            tuple->x = res;
+        else if (i == 1)
+            tuple->y = res;
+        else if (i == 2)
+            tuple->z = res;
+        else
+            tuple->w = res;
+        i++;
+    }
+    return (tuple);
+}
+
+t_matrix *matrix_transpose4x4(t_matrix *matrix)
+{
+    t_matrix *trans;
+    int i;
+    int j;
+
+    if (!matrix || !matrix->data)
+        return (NULL);
+    trans = create_matrix(4, 4 , NULL);
+    if (!trans)
+        return (NULL);
+    i = 0;
+    while (i < 4)
+    {
+        j = 0;
+        while (j < 4)
+        {
+            trans->data[i][j] = matrix->data[j][i];
+            j++;
+        }
+        i++;
+    }
+    return (trans);
+}
+
+double matrix_determinant2x2(t_matrix *matrix)
+{
+    if (!matrix || !matrix->data)
+        return (0);
+    return ((matrix->data[0][0] * matrix->data[1][1]) - (matrix->data[0][1] * matrix->data[1][0]));
+}
+
+void remove_row_cols(t_matrix *matrix, t_matrix *submatrix, int row, int column)
+{
+    int i;
+    int j;
+    int new_row;
+    int new_col;
+
+    i = -1;
+    new_row = 0;
+    while (++i < matrix->rows_num)
+    {
+        j = -1;
+        new_col = 0;
+        if (i != row)
+        {
+            while (++j < matrix->colums_num)
+            {
+                if (j != column)
+                {
+                    submatrix->data[new_row][new_col] = matrix->data[i][j];
+                    new_col++;
+                }
+            }
+            new_row++;
+        }
+    }
+}
+
+t_matrix *sub_matrix(t_matrix *matrix, int row, int column)
+{
+    t_matrix *submatrix;
+
+    if (!matrix || !matrix->data || matrix->colums_num <= column || matrix->rows_num <= row)
+        return (NULL);
+    submatrix = create_matrix(matrix->rows_num - 1, matrix->colums_num - 1, NULL);
+    if (!submatrix)
+        return (NULL);
+    remove_row_cols(matrix ,submatrix, row, column);
+    return (submatrix);
+}
 
 // MAIN -----------------------------------------------------------------------
 
@@ -514,33 +616,44 @@ int main()
     // print_type(pixel_at(canvas, 1, 1));
     // mlx_put_image_to_window(mlx, win, canvas->img->img, 0, 0);
     // mlx_loop(mlx);
+    t_matrix *matrix;
     t_matrix *matrix1;
     t_matrix *matrix2;
+    t_matrix *identity_matrix;
     t_matrix *res;
+    t_tuple *tuple;
 
-    double arr[4][4] = {{1,2,3,4}, {2,3,4,5}, {3,4,5,6}, {4,5,6,7}};
-    double arr2[4][4] = {{0,1,2,4}, {1,2,4,8}, {2,4,8,16}, {4,8,16,32}};
+    double arr[4][4] = {{-6,1,1,6}, {-8,5,8,6}, {-1,0,8,2}, {-7,1,-1,1}};
+    double arr1[3][3] = {{1,5,0}, {-3,2,7}, {0,6,-3}};
+    double arr2[4][4] = {{0,9,3,0}, {9,8,0,8}, {1,8,5,3}, {0,0,5,8}};
+    double arr3[4][4] = {{1,2,3,4}, {2,4,4,2}, {8,6,4,1}, {0,0,0,1}};
+    double arr4[4][4] = {{1,0,0,0}, {0,1,0,0}, {0,0,1,0}, {0,0,0,1}};
 
+    double arr5[2][2] = {{1,5}, {-3,2}};
+
+    const double *input0[3] = {arr1[0], arr1[1], arr1[2]};
     const double *input1[4] = {arr[0], arr[1], arr[2], arr[3]};
     const double *input2[4] = {arr2[0], arr2[1], arr2[2], arr2[3]};
+    const double *input3[4] = {arr3[0], arr3[1], arr3[2], arr3[3]};
+    const double *input4[4] = {arr4[0], arr4[1], arr4[2], arr4[3]};
+    const double *input5[2] = {arr5[0], arr5[1]};
 
-    matrix1 = create_matrix(4, 4, input1);
-    if (!matrix1)
-        return (-2);
-    matrix2 = create_matrix(4, 4, input2);
-    if (!matrix2)
-        return (-2);
-    print_matrix(matrix1);
-    print_matrix(matrix2);
-    // if (matrix_equal(matrix1, matrix2))
-        // printf("MATRIX 1 and MATRIX 2 Are equal! \n");
-    // else
-        // printf("MATRIX 1 and MATRIX 2 Are not equal! \n");
-    res = matrix_multiply(matrix1, matrix2, 4);
+    matrix = create_matrix(2, 2, input5);
+    matrix1 = create_matrix(3, 3, input0);
+    matrix2 = create_matrix(4, 4, input1);
+    // res = create_matrix(4, 4, input3);
+    identity_matrix = create_matrix(4, 4, input4);
+
+    tuple = creat_tuple(1, 2, 3, 1);
+    res = sub_matrix(matrix2, 2, 1);
     print_matrix(res);
+    // printf("%f\n",matrix_determinant2x2(matrix));
+    free_matrix(res);
+    free_matrix(matrix);
+    free(tuple);
     free_matrix(matrix1);
     free_matrix(matrix2);
-    free_matrix(res);
+    free_matrix(identity_matrix);
     return 0;
 
 }
