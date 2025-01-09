@@ -596,6 +596,10 @@ double matrix_minor(t_matrix *matrix, int row, int column)
     return (minor);
 }
 
+bool matrix_invertiblity(t_matrix *matrix)
+{
+    return (matrix_determinant(matrix));
+}
 // MAIN -----------------------------------------------------------------------
 
 int main()
