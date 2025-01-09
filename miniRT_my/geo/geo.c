@@ -260,14 +260,6 @@ t_tuple *pixel_at(t_canvas *canvas, int x, int y)
 }
 
 // MATRIXS INTO THE SCENE------------------------------------------------------------
-
-typedef struct s_matrix
-{
-    int rows_num;
-    int colums_num;
-    double **data;
-} t_matrix;
-
 void free_matrix(t_matrix *matrix)
 {
     int i;
@@ -363,6 +355,7 @@ t_matrix *create_matrix(int rows, int colums, const double *arr[])
         return (NULL);
     matrix->rows_num = rows;
     matrix->colums_num = colums;
+    matrix->size = rows;
     if (!arr || !*arr)
     {
         matrix->data = set_zeros(rows, colums);
@@ -517,12 +510,6 @@ t_matrix *matrix_transpose4x4(t_matrix *matrix)
     return (trans);
 }
 
-double matrix_determinant2x2(t_matrix *matrix)
-{
-    if (!matrix || !matrix->data)
-        return (0);
-    return ((matrix->data[0][0] * matrix->data[1][1]) - (matrix->data[0][1] * matrix->data[1][0]));
-}
 
 void remove_row_cols(t_matrix *matrix, t_matrix *submatrix, int row, int column)
 {
@@ -565,17 +552,48 @@ t_matrix *sub_matrix(t_matrix *matrix, int row, int column)
     return (submatrix);
 }
 
-double matrix_minor3x3(t_matrix *matrix, int row, int column)
+double matrix_cofactor(t_matrix *matrix, int row, int column)
+{
+    double cofactor;
+
+    cofactor = matrix_minor(matrix, row, column);
+    if ((row + column) % 2)
+        return (-cofactor);
+    return (cofactor);
+}
+
+double matrix_determinant(t_matrix *matrix)
+{
+    double determinant;
+    int    j;
+
+    if (!matrix || !matrix->data)
+        return 0;
+    j = -1;
+    determinant = 0;
+    if (matrix->size == 2)
+        determinant = (matrix->data[0][0] * matrix->data[1][1]) - (matrix->data[0][1] * matrix->data[1][0]);
+    else
+    {
+        while (++j < matrix->size)
+            determinant += matrix_cofactor(matrix, 0, j) * matrix->data[0][j];
+    }
+    return (determinant);
+}
+
+double matrix_minor(t_matrix *matrix, int row, int column)
 {
     t_matrix *sub;
-    double  res;
+    double  minor;
 
+    if (!matrix || !matrix->data)
+        return (0);
     sub = sub_matrix(matrix, row, column);
     if (!sub)
         return (0);
-    res = matrix_determinant2x2(sub);
+    minor = matrix_determinant(sub);
     free_matrix(sub);
-    return (res);
+    return (minor);
 }
 
 // MAIN -----------------------------------------------------------------------
@@ -636,8 +654,8 @@ int main()
     t_matrix *res;
     t_tuple *tuple;
 
-    double arr[4][4] = {{-6,1,1,6}, {-8,5,8,6}, {-1,0,8,2}, {-7,1,-1,1}};
-    double arr1[3][3] = {{3,5,0}, {2,-1,7}, {6,-1,5}};
+    double arr[4][4] = {{-2,-8,3,5}, {-3,1,7,3}, {1,2,-9,6}, {-6,7,7,-9}};
+    double arr1[3][3] = {{1,2,6}, {-5,8,-4}, {2,6,4}};
     double arr2[4][4] = {{0,9,3,0}, {9,8,0,8}, {1,8,5,3}, {0,0,5,8}};
     double arr3[4][4] = {{1,2,3,4}, {2,4,4,2}, {8,6,4,1}, {0,0,0,1}};
     double arr4[4][4] = {{1,0,0,0}, {0,1,0,0}, {0,0,1,0}, {0,0,0,1}};
@@ -660,7 +678,19 @@ int main()
     tuple = creat_tuple(1, 2, 3, 1);
     // res = sub_matrix(matrix2, 2, 1);
     // print_matrix(res);
-    printf("%f\n",matrix_minor3x3(matrix1, 1, 0));
+    // printf("%f\n",matrix_cofactor(matrix1, 1, 0));
+    printf("%f\n",matrix_cofactor(matrix1, 0, 0));
+    printf("%f\n",matrix_cofactor(matrix1, 0, 1));
+    printf("%f\n",matrix_cofactor(matrix1, 0, 2));
+    // printf("%f\n",matrix_cofactor(matrix1, 0, 3));
+    printf("%f\n",matrix_determinant(matrix1));
+
+    printf("\n%f\n",matrix_cofactor(matrix2, 0, 0));
+    printf("%f\n",matrix_cofactor(matrix2, 0, 1));
+    printf("%f\n",matrix_cofactor(matrix2, 0, 2));
+    printf("%f\n",matrix_cofactor(matrix2, 0, 3));
+    printf("%f\n",matrix_determinant(matrix2));
+
     free_matrix(res);
     free_matrix(matrix);
     free(tuple);

@@ -64,6 +64,15 @@ typedef struct s_canvas
 } t_canvas;
 
 
+typedef struct s_matrix
+{
+    int rows_num;
+    int colums_num;
+    int size;
+    double **data;
+} t_matrix;
+
+
 
 t_tuple *creat_tuple(double x, double y, double z, double w);
 t_tuple *creat_vector(double x, double y, double z);
@@ -77,5 +86,8 @@ t_tuple *mul_tuple(t_tuple *a, double b);
 double  len_tuple(t_tuple *a);
 t_tuple *norm_tuple(t_tuple *a);
 double  dot_tuple(t_tuple *a, t_tuple *b);
+double matrix_determinant(t_matrix *matrix);
+double matrix_minor(t_matrix *matrix, int row, int column);
+double matrix_cofactor(t_matrix *matrix, int row, int column);
 
 #endif
