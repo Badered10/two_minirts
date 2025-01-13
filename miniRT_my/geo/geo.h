@@ -6,10 +6,15 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 
 #ifdef EPSILON
 #undef EPSILON
+#endif
+
+#ifdef PI
+#undef PI
 #endif
 
 #ifdef POINT
@@ -25,6 +30,7 @@
 #define VEC 0
 
 #define EPSILON 0.00001
+#define PI 3.14159265359
 
 
 typedef struct s_tuple
@@ -66,17 +72,25 @@ typedef struct s_canvas
 
 typedef struct s_matrix
 {
-    int rows_num;
-    int colums_num;
     int size;
     double **data;
 } t_matrix;
 
+typedef struct s_shearing
+{
+    double xy;
+    double xz;
+    double yx;
+    double yz;
+    double zx;
+    double zy;
+} t_shearing;
 
 
-t_tuple *creat_tuple(double x, double y, double z, double w);
-t_tuple *creat_vector(double x, double y, double z);
-t_tuple *creat_point(double x, double y, double z);
+
+t_tuple *create_tuple(double x, double y, double z, double w);
+t_tuple *create_vector(double x, double y, double z);
+t_tuple *create_point(double x, double y, double z);
 bool    equal(double a, double b);
 bool    equal_tuple(t_tuple *a, t_tuple *b);
 t_tuple *add_tuple(t_tuple *a, t_tuple *b);

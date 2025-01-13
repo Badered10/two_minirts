@@ -65,105 +65,105 @@ int	key_hook(int keycode, t_rt *rt)
 	return (0);
 }
 
-int add_gradient(int x , int y)
-{
-    int scaled_y;
-    int scaled_x;
-
-    scaled_x = x * 255 / WIDTH;
-    scaled_y = y * 255 / HEIGHT;
-
-    return ((scaled_y << 16) | (scaled_x << 8));
-}
-
-void insert_scene(t_rt *rt)
-{
-    int x;
-    int y;
-
-    y = 0;
-    while (y < WIDTH)
-    {
-        x = 0;
-        while (x < HEIGHT)
-        {
-            my_mlx_pixel_put(&rt->mini.img, x , y, add_gradient(x, y));
-            x++;
-        }
-        y++;
-    }
-}
-
-void insert_cercle(t_rt *rt, int a, int b, int r, int color)
-{
-    int x; // x coord of circle
-    int y; // y coord of circle
-    int dist; // distance between center of circle and point
-
-    // (x - a)² + (y - b)² = r²
-
-    // a is the x coord of the center of the circle
-    // b is the y coord of the center of the circle
-    // r is the radius of the circle
-
-    x = 0;
-    while (x < WIDTH)
-    {
-        y = 0;
-        while (y < HEIGHT)
-        {
-            dist = (x - a) * (x - a) + (y - b) * (y - b);
-            if (dist <= r * r)
-                my_mlx_pixel_put(&rt->mini.img, x, y, color);
-            y++;
-        }
-        x++;
-    }
-}
-
-// void insert_sphere(t_rt *rt, int x, int y, int color)
+// int add_gradient(int x , int y)
 // {
-//     t_vec3 ray_origin;
-//     t_vec3 ray_direction;
-//     double r = 0.5; // radius of the sphere
-//     // int dist; // distance between center of circle and point
+//     int scaled_y;
+//     int scaled_x;
 
-//     // cercle equation : (X)² + (Y)² - r² = 0 , while  center coords is (0, 0)
-//     // vector equation is : a + tb .
+//     scaled_x = x * 255 / WIDTH;
+//     scaled_y = y * 255 / HEIGHT;
 
-//     // ax + bxt = X
-//     // ay + bxt = Y
+//     return ((scaled_y << 16) | (scaled_x << 8));
+// }
 
-//     // (ax + bxt)² + (ay + byt)² - r² = 0
-//     // ax² + 2axbxt + bx²t² + ay² + 2aybyt + by²t² - r² = 0
-//     // (bx² + by²)t² + (2(axbx + ayby))t + (ax² + ay² - r²) = 0
+// void insert_scene(t_rt *rt)
+// {
+//     int x;
+//     int y;
+
+//     y = 0;
+//     while (y < WIDTH)
+//     {
+//         x = 0;
+//         while (x < HEIGHT)
+//         {
+//             my_mlx_pixel_put(&rt->mini.img, x , y, add_gradient(x, y));
+//             x++;
+//         }
+//         y++;
+//     }
+// }
+
+// void insert_cercle(t_rt *rt, int a, int b, int r, int color)
+// {
+//     int x; // x coord of circle
+//     int y; // y coord of circle
+//     int dist; // distance between center of circle and point
+
+//     // (x - a)² + (y - b)² = r²
+
+//     // a is the x coord of the center of the circle
+//     // b is the y coord of the center of the circle
+//     // r is the radius of the circle
+
+//     x = 0;
+//     while (x < WIDTH)
+//     {
+//         y = 0;
+//         while (y < HEIGHT)
+//         {
+//             dist = (x - a) * (x - a) + (y - b) * (y - b);
+//             if (dist <= r * r)
+//                 my_mlx_pixel_put(&rt->mini.img, x, y, color);
+//             y++;
+//         }
+//         x++;
+//     }
+// }
+
+// // void insert_sphere(t_rt *rt, int x, int y, int color)
+// // {
+// //     t_vec3 ray_origin;
+// //     t_vec3 ray_direction;
+// //     double r = 0.5; // radius of the sphere
+// //     // int dist; // distance between center of circle and point
+
+// //     // cercle equation : (X)² + (Y)² - r² = 0 , while  center coords is (0, 0)
+// //     // vector equation is : a + tb .
+
+// //     // ax + bxt = X
+// //     // ay + bxt = Y
+
+// //     // (ax + bxt)² + (ay + byt)² - r² = 0
+// //     // ax² + 2axbxt + bx²t² + ay² + 2aybyt + by²t² - r² = 0
+// //     // (bx² + by²)t² + (2(axbx + ayby))t + (ax² + ay² - r²) = 0
     
-//     // let's solve for t: 
-//     // t = (-b ± √(b² - 4ac)) / 2a
+// //     // let's solve for t: 
+// //     // t = (-b ± √(b² - 4ac)) / 2a
 
-//     // a is ray origin
-//     // b is ray direction
-//     // r is the radius of the sphere
-//     // t is hit distance
+// //     // a is ray origin
+// //     // b is ray direction
+// //     // r is the radius of the sphere
+// //     // t is hit distance
 
-//     double a = vec3_dot(ray_direction , ray_direction);
-//     double b = 2 * vec3_dot(ray_direction, ray_origin);
-//     double c = vec3_dot(ray_origin, ray_origin) - r * r;
+// //     double a = vec3_dot(ray_direction , ray_direction);
+// //     double b = 2 * vec3_dot(ray_direction, ray_origin);
+// //     double c = vec3_dot(ray_origin, ray_origin) - r * r;
 
 
-//     // x = 0;
-//     // while (x < WIDTH)
-//     // {
-//     //     y = 0;
-//     //     while (y < HEIGHT)
-//     //     {
-//     //         dist = (x - a) * (x - a) + (y - b) * (y - b);
-//     //         if (dist <= r * r)
-//     //             my_mlx_pixel_put(&rt->mini.img, x, y, color);
-//     //         y++;
-//     //     }
-//     //     x++;
-//     // }
+// //     // x = 0;
+// //     // while (x < WIDTH)
+// //     // {
+// //     //     y = 0;
+// //     //     while (y < HEIGHT)
+// //     //     {
+// //     //         dist = (x - a) * (x - a) + (y - b) * (y - b);
+// //     //         if (dist <= r * r)
+// //     //             my_mlx_pixel_put(&rt->mini.img, x, y, color);
+// //     //         y++;
+// //     //     }
+// //     //     x++;
+// //     // }
 
 
 int main()
@@ -189,30 +189,42 @@ int main()
     t_vec3      pixel00_loc;
     t_vec3      viewport_upper_left;
 
-    viewport_height = 2.0;
+
     focal_length = 1.0;
+    viewport_height = 2.0;
     aspect_ratio = 16.0 / 9.0;
     viewport_width = viewport_height * aspect_ratio;
     image_width = WIDTH;
     image_height = (int)(image_width / aspect_ratio);
+
     // printf("WIDTH:%d ,HEIGHT:%d\n\n", image_width, image_height);
+
+
+    // // Calculate the viewport parameters.
+
     camera_center = create_point3(0, 0, 0);
     horizontal = vec3(viewport_width, 0, 0);
     vertical = vec3(0, viewport_height, 0);
-    lower_left_corner = vec3_sub(camera_center, vec3_add(vec3_add(vec3_scale(horizontal, 0.5), vec3_scale(vertical, 0.5)), vec3(0, 0, focal_length)));
+    lower_left_corner = vec3_sub(camera_center, vec3_add(vec3_add(vec3_scale(horizontal, 0.5), vec3_scale(vertical, 0.5)), vec3(0, 0, focal_length)));  
+   
+    // // Calculate the horizontal and vertical unit vectors.
 
-    // // Calculate the vectors across the horizontal and down the vertical viewport edges.
     viewport_u = vec3(viewport_width, 0, 0);
     viewport_v = vec3(0, viewport_height, 0);
+
 
     // // Calculate the horizontal and vertical delta vectors from pixel to pixel.
 
     pixel_delta_u = vec3_scale(viewport_u, 1.0 / image_width);
     pixel_delta_v = vec3_scale(viewport_v, 1.0 / image_height);
 
-    // // Calculate the location of the upper-left pixel in the viewport.
+
+    // Calculate the location of the upper-left pixel in the viewport.
     viewport_upper_left = vec3_sub(lower_left_corner, vec3_add(vec3_scale(viewport_u, 0.5), vec3_scale(viewport_v, 0.5)));
     pixel00_loc = vec3_sub(viewport_upper_left, vec3_scale(pixel_delta_u, 0.5));
+   
+
+    // // Initialize the MiniLibX window and image buffer.
 
     rt.mini.mlx = mlx_init();
     if (!rt.mini.mlx) 
@@ -242,28 +254,24 @@ int main()
         return (1);
     }
 
-    // Render
-    printf("WIDTH:%d ,HEIGHT:%d\n\n", image_width, image_height);
-    int j = 0;
-    for ( ;j < image_height; j++) 
+    for (int j = 0; j < image_height; j++) 
     {
         dprintf(2, "\rScanlines remaining: %d \n", (image_height - j));
         for (int i = 0; i < image_width; i++) 
         {
-            // Calculate the direction of the ray from the camera to the pixel.
-            t_vec3 pixel_center;
-            t_vec3 direction;
-            int color;
-        
-            pixel_center = vec3_add(pixel00_loc, vec3_add(vec3_scale(pixel_delta_u, i), vec3_scale(pixel_delta_v, j)));
-            direction = vec3_sub(pixel_center, camera_center);
-            r = create_ray(camera_center, direction);
-            pixel_color = ray_color(r);
+            float u = (float)i / (image_width - 1);
+            float v = (float)j / (image_height - 1);
+            t_vec3 direction = vec3_add(lower_left_corner, vec3_add(vec3_scale(horizontal, u), vec3_scale(vertical, v)));
+            direction = vec3_sub(direction, camera_center);
+            t_ray r = create_ray(camera_center, direction);
+            t_color pixel_color = ray_color(r);
+
             // Set the pixel color in the MiniLibX image buffer
-            color = t_color_to_int(pixel_color);
-            my_mlx_pixel_put(&rt.mini.img, i,  j, color);
+            int color = t_color_to_int(pixel_color);
+            my_mlx_pixel_put(&rt.mini.img, i, image_height - j - 1, color);
         }
     }
+
 
     mlx_put_image_to_window(rt.mini.mlx, rt.mini.window, rt.mini.img.img, 0, 0);
     mlx_key_hook(rt.mini.window, &key_hook, &rt);

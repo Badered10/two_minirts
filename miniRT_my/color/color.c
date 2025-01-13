@@ -1,17 +1,35 @@
 #include "color.h"
 #include <stdbool.h>
+#include <stdlib.h>
+#include "../vec3/vec3.h"
+
+typedef struct 
+{
+    t_point3 center;
+    double radius;
+} t_sphere;
+
 
 double hit_sphere(t_point3 center, double radius, t_ray r)
 {
-    t_vec3 oc = vec3_sub(center, r.orig);
+    t_vec3 oc = vec3_sub(r.orig, center);
     double a = vec3_dot(r.dir, r.dir);
     double b = 2.0 * vec3_dot(r.dir, oc);
     double c = vec3_dot(oc, oc) - radius * radius;
     double discriminant = b * b - 4 * a * c;
-    if (discriminant < 0)
+
+    if (discriminant < 0.0)
         return (-1.0);
     else
-        return (-b - sqrt(discriminant)) / (2.0 * a);
+    {
+        double t1 = (-b - sqrt(discriminant)) / (2.0 * a);
+        double t2 = (-b + sqrt(discriminant)) / (2.0 * a);
+        if (t1 > 0.0)
+            return t1;
+        if (t2 > 0.0)
+            return t2;
+        return (-1.0);
+    }
 }
 
 t_color int_to_t_color(int color)
@@ -49,16 +67,10 @@ void write_color(const t_vec3 pixel_color)
 
 t_color ray_color(t_ray r)
 {
-    t_vec3 unit_direction;
-    double t;
+    double closest_t = 1e30;
+    t_sphere *closest_sphere = NULL;
 
-    t = hit_sphere(vec3(0, 0, -1), 0.5, r);
-    if (t > 0.0)
-    {
-        t_vec3 N = vec3_unit(vec3_sub(ray_at(r, t), vec3(0, 0, -1)));
-        return vec3_scale(vec3_add(N, vec3(1, 1, 1)), 0.5);
-    }
-    unit_direction = vec3_unit(r.dir);
-    float a = 0.5 * (unit_direction.y + 1.0);
-    return vec3_add(vec3_scale(vec3(1.0, 1.0, 1.0), 1.0 - a), vec3_scale(vec3(0.5, 0.7, 1.0), a));
+    t_vec3 unit_direction = vec3_unit(r.dir);
+    float t = 0.5 * (unit_direction.y + 1.0);
+    return vec3_add(vec3_scale(vec3(1.0, 1.0, 1.0), 1.0 - t), vec3_scale(vec3(0.5, 0.7, 1.0), t));
 }

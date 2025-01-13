@@ -1,3 +1,16 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   geo.c                                              :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/01/11 17:17:09 by baouragh          #+#    #+#             */
+/*   Updated: 2025/01/12 18:39:58 by baouragh         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+
 #include "geo.h"
 
 // DEBUG FUNCTION-------------------------------------------------------------------------------
@@ -18,7 +31,7 @@ void print_type(t_tuple *tuple)
 }
 
 // CREATE A TUPLE STRUCTURE---------------------------------------------------------------------
-t_tuple *creat_tuple(double x, double y, double z, double w)
+t_tuple *create_tuple(double x, double y, double z, double w)
 {
     t_tuple *tuple;
     tuple = malloc(sizeof(t_tuple));
@@ -33,19 +46,19 @@ t_tuple *creat_tuple(double x, double y, double z, double w)
     return (tuple);
 }
 
-t_tuple *creat_point(double x, double y, double z)
+t_tuple *create_point(double x, double y, double z)
 {
-    return (creat_tuple(x, y, z, 1));
+    return (create_tuple(x, y, z, 1));
 }
 
-t_tuple *creat_vector(double x, double y, double z)
+t_tuple *create_vector(double x, double y, double z)
 {
-    return (creat_tuple(x, y, z, 0));
+    return (create_tuple(x, y, z, 0));
 }
 
-t_tuple *creat_color(double x, double y, double z)
+t_tuple *create_color(double x, double y, double z)
 {
-    return (creat_tuple(x, y, z, 20));
+    return (create_tuple(x, y, z, 20));
 }
 
 // ARTHEMATIC FUNCTIONS-------------------------------------------------------------------------
@@ -68,27 +81,27 @@ bool equal_tuple(t_tuple *a, t_tuple *b)
 
 t_tuple *add_tuple(t_tuple *a, t_tuple *b)
 {
-    return (creat_tuple(a->x + b->x, a->y + b->y, a->z + b->z, a->w + b->w));
+    return (create_tuple(a->x + b->x, a->y + b->y, a->z + b->z, a->w + b->w));
 }
 
 t_tuple *sub_tuple(t_tuple *a, t_tuple *b)
 {
-    return (creat_tuple(a->x - b->x, a->y - b->y, a->z - b->z, a->w - b->w));
+    return (create_tuple(a->x - b->x, a->y - b->y, a->z - b->z, a->w - b->w));
 }
 
 t_tuple *negate_tuple(t_tuple *a)
 {
-    return (creat_tuple(-a->x, -a->y, -a->z, -a->w));
+    return (create_tuple(-a->x, -a->y, -a->z, -a->w));
 }
 
 t_tuple *mul_tuple(t_tuple *a, double b)
 {
-    return (creat_tuple(a->x * b, a->y * b, a->z * b, a->w * b));
+    return (create_tuple(a->x * b, a->y * b, a->z * b, a->w * b));
 }
 
 t_tuple *div_tuple(t_tuple *a, double b)
 {
-    return (creat_tuple(a->x / b, a->y / b, a->z / b, a->w / b));
+    return (create_tuple(a->x / b, a->y / b, a->z / b, a->w / b));
 }
 double len_tuple(t_tuple *a)
 {
@@ -106,19 +119,19 @@ double dot_tuple(t_tuple *a, t_tuple *b)
 
 t_tuple *cross_tuple(t_tuple *a, t_tuple *b)
 {
-    return (creat_vector(a->y * b->z - a->z * b->y,
+    return (create_vector(a->y * b->z - a->z * b->y,
         a->z * b->x - a->x * b->z,
         a->x * b->y - a->y * b->x));
 }
 
 t_tuple *hadamard_product(t_tuple *a, t_tuple *b)
 {
-    return (creat_color(a->x * b->x, a->y * b->y, a->z * b->z));
+    return (create_color(a->x * b->x, a->y * b->y, a->z * b->z));
 }
 
 // PROJECTILE FUNCS--------------------------------------------------------------------------
 
-t_projectile *creat_projectile(t_tuple *position, t_tuple *speed)
+t_projectile *create_projectile(t_tuple *position, t_tuple *speed)
 {
     t_projectile *projectile = malloc(sizeof(t_projectile));
     if (projectile == NULL)
@@ -130,7 +143,7 @@ t_projectile *creat_projectile(t_tuple *position, t_tuple *speed)
     return (projectile);
 }
 
-t_environment *creat_environment(t_tuple *gravity, t_tuple *wind)
+t_environment *create_environment(t_tuple *gravity, t_tuple *wind)
 {
     t_environment *environment = malloc(sizeof(t_environment));
     if (environment == NULL)
@@ -147,7 +160,7 @@ t_projectile *tick(t_environment *env, t_projectile *projectile)
     t_tuple *position = add_tuple(projectile->position, projectile->speed);
     t_tuple *speed = add_tuple(add_tuple(projectile->speed, env->gravity), env->wind);
 
-    return (creat_projectile(position, speed));
+    return (create_projectile(position, speed));
 }
 
 // MLX MY--------------------------------------------------------------------------------------
@@ -168,7 +181,7 @@ t_img *new_img( int width, int height, void *mlx)
     return (img);
 }
 
-t_canvas * creat_canvas(int width , int height, void *mlx_ptr)
+t_canvas * create_canvas(int width , int height, void *mlx_ptr)
 {
     t_canvas *canvas;
 
@@ -243,7 +256,7 @@ t_tuple * int_to_color(int color)
     g = ((color >> 8) & 0XFF) / 255.0;
     b = (color & 0XFF) / 255.0;
 
-    return (creat_color(r, g, b));
+    return (create_color(r, g, b));
 }
 
 void write_pixel(t_canvas *canvas, int x, int y, t_tuple *red)
@@ -267,7 +280,7 @@ void free_matrix(t_matrix *matrix)
     i = 0;
     if (!matrix)
         return;
-    while (i < matrix->rows_num)
+    while (i < matrix->size)
     {
         free(matrix->data[i]);
         i++;
@@ -348,13 +361,11 @@ t_matrix *create_matrix(int rows, int colums, const double *arr[])
 {
     t_matrix *matrix;
 
-    if (rows <= 0 || colums <= 0)
+    if (rows <= 0 || colums <= 0 || rows != colums)
         return (NULL);
     matrix = malloc(sizeof(t_matrix));
     if (!matrix)
         return (NULL);
-    matrix->rows_num = rows;
-    matrix->colums_num = colums;
     matrix->size = rows;
     if (!arr || !*arr)
     {
@@ -371,7 +382,7 @@ t_matrix *create_matrix(int rows, int colums, const double *arr[])
 
 double matrix_at(t_matrix *m, int i, int j)
 {
-    if (i > m->rows_num || i < 0 || j > m->colums_num || j < 0)
+    if (i > m->size || i < 0 || j > m->size || j < 0)
         return (printf("ERROR : MATRIX OUT OF RANGE\n"), -1);
 
     return (m->data[i][j]);    
@@ -383,10 +394,10 @@ void print_matrix(t_matrix *m)
     int j;
 
     i = 0;
-    while (i < m->rows_num)
+    while (i < m->size)
     {
         j = 0;
-        while (j < m->colums_num)
+        while (j < m->size)
         {
             printf("M[%d][%d] = %f ",i ,j ,matrix_at(m, i, j));
             j++;
@@ -405,13 +416,13 @@ bool matrix_equal(t_matrix *m1, t_matrix *m2)
     int j;
 
     if (!m1 || !m2 || !m1->data || !m2->data ||
-         m1->colums_num != m2->colums_num || m1->rows_num != m2->rows_num)
+         m1->size != m2->size)
         return (0);
     i = 0;
-    while (i < m1->rows_num)
+    while (i < m1->size)
     {
         j = 0;
-        while (j < m1->colums_num)
+        while (j < m1->size)
         {
             if (!equal(matrix_at(m1, i, j), matrix_at(m2, i, j)))
             {
@@ -432,9 +443,7 @@ t_matrix *matrix_multiply(t_matrix *a, t_matrix *b, int size) // JUST FOR 4X4 ma
     int i;
     int j;
 
-    if (!a || !b || !a->data || !b->data 
-        || a->colums_num != size || a->rows_num != size
-        || b->colums_num != size || b->rows_num != size)
+    if (!a || !b || !a->data || !b->data || a->size != size || b->size != size)
         return (0);
     matrix = create_matrix(size, size, NULL);
     if (!matrix)
@@ -462,13 +471,13 @@ t_tuple *matrix_tuple_mul4x4(t_matrix *a, t_tuple *t) // JUST FOR 4X4 matrixs
     int i;
     double res;
 
-    if (!a || !t || !a->data || a->colums_num != 4 || a->rows_num != 4)
+    if (!a || !t || !a->data || a->size != 4)
         return (0);
-    tuple = creat_tuple(0, 0, 0, 0);
+    tuple = create_tuple(0, 0, 0, 0);
     i = 0;
     while (i < 4)
     {
-        res =   a->data[i][0] * t->x 
+        res =     a->data[i][0] * t->x
                 + a->data[i][1] * t->y 
                 + a->data[i][2] * t->z
                 + a->data[i][3] * t->w;
@@ -520,13 +529,13 @@ void remove_row_cols(t_matrix *matrix, t_matrix *submatrix, int row, int column)
 
     i = -1;
     new_row = 0;
-    while (++i < matrix->rows_num)
+    while (++i < matrix->size)
     {
         j = -1;
         new_col = 0;
         if (i != row)
         {
-            while (++j < matrix->colums_num)
+            while (++j < matrix->size)
             {
                 if (j != column)
                 {
@@ -543,9 +552,9 @@ t_matrix *sub_matrix(t_matrix *matrix, int row, int column)
 {
     t_matrix *submatrix;
 
-    if (!matrix || !matrix->data || matrix->colums_num <= column || matrix->rows_num <= row)
+    if (!matrix || !matrix->data || matrix->size <= column || matrix->size <= row)
         return (NULL);
-    submatrix = create_matrix(matrix->rows_num - 1, matrix->colums_num - 1, NULL);
+    submatrix = create_matrix(matrix->size - 1, matrix->size - 1, NULL);
     if (!submatrix)
         return (NULL);
     remove_row_cols(matrix ,submatrix, row, column);
@@ -598,8 +607,168 @@ double matrix_minor(t_matrix *matrix, int row, int column)
 
 bool matrix_invertiblity(t_matrix *matrix)
 {
-    return (matrix_determinant(matrix));
+    double determinant;
+
+    determinant = matrix_determinant(matrix);
+    return ((fabs(determinant) > EPSILON));
 }
+
+t_matrix *matrix_inverse(t_matrix *matrix)
+{
+    t_matrix *inverse;
+    double cofactor;
+    double determinant;
+    int row;
+    int col;
+
+    if (!matrix || !matrix->data || !matrix_invertiblity(matrix))
+        return (NULL);
+    inverse = create_matrix(matrix->size, matrix->size, NULL);
+    if (!inverse)
+        return (NULL);
+    determinant = matrix_determinant(matrix);
+    row = -1;
+    while (++row < matrix->size)
+    {
+        col = -1;
+        while (++col < matrix->size)
+        {
+            cofactor = matrix_cofactor(matrix, row, col);
+            inverse->data[col][row] = cofactor / determinant;
+        }
+    }
+    return (inverse);
+}
+
+t_matrix* translation(double x, double y, double z)
+{
+    t_matrix *matrix;
+
+    matrix = create_matrix(4, 4, NULL);
+    if (!matrix)
+        return (NULL);
+    matrix->data[0][0] = 1;
+    matrix->data[1][1] = 1;
+    matrix->data[2][2] = 1;
+    matrix->data[3][3] = 1;
+    matrix->data[0][3] = x;
+    matrix->data[1][3] = y;
+    matrix->data[2][3] = z;
+    return (matrix);
+}
+
+t_matrix *scaling(double x, double y, double z)
+{
+    t_matrix *matrix;
+
+    matrix = create_matrix(4, 4, NULL);
+    if (!matrix)
+        return (NULL);
+    matrix->data[0][0] = x;
+    matrix->data[1][1] = y;
+    matrix->data[2][2] = z;
+    matrix->data[3][3] = 1;
+    return (matrix);
+}
+
+double deg_to_rad(double deg)
+{
+    return ((deg / 180) * PI);
+}
+
+double rad_to_deg(double rad)
+{
+    return ((rad / PI) * 180);
+}
+
+t_matrix *rotation_x(double rad)
+{
+    t_matrix *matrix;
+
+    matrix = create_matrix(4, 4, NULL);
+    if (!matrix)
+        return (NULL);
+
+    matrix->data[0][0] = 1;
+    matrix->data[3][3] = 1;
+    
+    matrix->data[1][1] = cos(rad);
+    matrix->data[1][2] = -sin(rad);
+    matrix->data[2][1] = sin(rad);
+    matrix->data[2][2] = cos(rad);
+    return (matrix);
+}
+
+t_matrix *rotation_y(double rad)
+{
+    t_matrix *matrix;
+
+    matrix = create_matrix(4, 4, NULL);
+    if (!matrix)
+        return (NULL);
+
+    matrix->data[3][3] = 1;
+    matrix->data[2][1] = 1;
+    
+    matrix->data[0][0] = cos(rad);
+    matrix->data[0][2] = sin(rad);
+    matrix->data[2][0] = -sin(rad);
+    matrix->data[2][2] = cos(rad);
+    return (matrix);
+}
+
+t_matrix *rotation_z(double rad)
+{
+    t_matrix *matrix;
+
+    matrix = create_matrix(4, 4, NULL);
+    if (!matrix)
+        return (NULL);
+
+    matrix->data[3][3] = 1;
+    matrix->data[2][2] = 1;
+    
+    matrix->data[0][0] = cos(rad);
+    matrix->data[0][1] = -sin(rad);
+    matrix->data[1][0] = sin(rad);
+    matrix->data[1][1] = cos(rad);
+    return (matrix);
+}
+
+t_shearing *create_shearing(void)
+{
+    t_shearing *shearing;
+
+    shearing = malloc(sizeof(t_shearing));
+    if (!shearing)
+        return (NULL);
+    memset(shearing, 0, sizeof(t_shearing));
+    return (shearing);
+}
+
+t_matrix *shearing(t_shearing *nums)
+{
+    t_matrix *matrix;
+
+    if (!nums)
+        return (NULL);
+    matrix = create_matrix(4, 4, NULL);
+    if (!matrix)
+        return (NULL);
+    matrix->data[0][0] = 1;
+    matrix->data[1][1] = 1;
+    matrix->data[2][2] = 1;
+    matrix->data[3][3] = 1;
+    matrix->data[0][1] = nums->xy;
+    matrix->data[0][2] = nums->xz;
+    matrix->data[1][0] = nums->yx;
+    matrix->data[1][2] = nums->yz;
+    matrix->data[2][0] = nums->zx;
+    matrix->data[2][1] = nums->zy;
+
+    return (matrix);
+}
+
 // MAIN -----------------------------------------------------------------------
 
 int main()
@@ -616,23 +785,23 @@ int main()
     // t_canvas *canvas;
     // t_tuple  *red;
 
-    // pose = creat_point(0, 1, 0);
-    // speed = creat_vector(1, 1.8, 0);
-    // gravity = creat_vector(0, -0.1, 0);
-    // wind = creat_vector(-0.01, 0, 0);
-    // env = creat_environment(gravity, wind);
-    // projectile = creat_projectile(pose, mul_tuple(norm_tuple(speed), 11.25));
+    // pose = create_point(0, 1, 0);
+    // speed = create_vector(1, 1.8, 0);
+    // gravity = create_vector(0, -0.1, 0);
+    // wind = create_vector(-0.01, 0, 0);
+    // env = create_environment(gravity, wind);
+    // projectile = create_projectile(pose, mul_tuple(norm_tuple(speed), 11.25));
     // mlx = mlx_init();
     // if (!mlx)
     //     return(-1);
     // win = mlx_new_window(mlx, 900, 550, "test");
     // if (!win)
     //     return (-2);
-    // canvas = creat_canvas(900, 550, mlx);
+    // canvas = create_canvas(900, 550, mlx);
     // if (!canvas)
     //     return (-3);
     
-    // red = creat_color(1, 0, 0);
+    // red = create_color(1, 0, 0);
 
     // while (projectile->position->y > 0)
     // {
@@ -651,52 +820,88 @@ int main()
     // print_type(pixel_at(canvas, 1, 1));
     // mlx_put_image_to_window(mlx, win, canvas->img->img, 0, 0);
     // mlx_loop(mlx);
-    t_matrix *matrix;
+    t_matrix *matrix0;
     t_matrix *matrix1;
     t_matrix *matrix2;
-    t_matrix *identity_matrix;
+    t_matrix *matrix3;
     t_matrix *res;
+    t_matrix *mul;
+    t_matrix *identity_matrix;
     t_tuple *tuple;
-
-    double arr[4][4] = {{-2,-8,3,5}, {-3,1,7,3}, {1,2,-9,6}, {-6,7,7,-9}};
-    double arr1[3][3] = {{1,2,6}, {-5,8,-4}, {2,6,4}};
-    double arr2[4][4] = {{0,9,3,0}, {9,8,0,8}, {1,8,5,3}, {0,0,5,8}};
-    double arr3[4][4] = {{1,2,3,4}, {2,4,4,2}, {8,6,4,1}, {0,0,0,1}};
-    double arr4[4][4] = {{1,0,0,0}, {0,1,0,0}, {0,0,1,0}, {0,0,0,1}};
-
+    t_shearing *num_6;
+    
     double arr5[2][2] = {{1,5}, {-3,2}};
 
+    double arr1[3][3] = {{1,2,6}, {-5,8,-4}, {2,6,4}};
+
+    double arr[4][4] = {{8,-5,9,2}, {7,5,6,1}, {-6,0,9,6}, {-3,0,-9,-4}};
+    double arr2[4][4] = {{9,3,0,9}, {-5,-2,-6,-3}, {-4,9,6,4}, {-7,6,6,2}};
+    
+    // double arr[4][4] = {{1,2,3,4}, {5,6,7,8}, {9,8,7,6}, {5,4,3,2}};
+    // double arr2[4][4] = {{-2,1,2,3}, {3,2,1,-1}, {4,3,6,5}, {1,2,7,8}};
+    
+
+    double arr3[4][4] = {{1,2,3,4}, {2,4,4,2}, {8,6,4,1}, {0,0,0,1}};
+
+    double arr4[4][4] = {{1,0,0,0}, {0,1,0,0}, {0,0,1,0}, {0,0,0,1}};
+
+
+    const double *input5[2] = {arr5[0], arr5[1]};
     const double *input0[3] = {arr1[0], arr1[1], arr1[2]};
+
+    
     const double *input1[4] = {arr[0], arr[1], arr[2], arr[3]};
     const double *input2[4] = {arr2[0], arr2[1], arr2[2], arr2[3]};
+    
     const double *input3[4] = {arr3[0], arr3[1], arr3[2], arr3[3]};
     const double *input4[4] = {arr4[0], arr4[1], arr4[2], arr4[3]};
-    const double *input5[2] = {arr5[0], arr5[1]};
 
-    matrix = create_matrix(2, 2, input5);
+    matrix0 = create_matrix(2, 2, input5);
     matrix1 = create_matrix(3, 3, input0);
-    matrix2 = create_matrix(4, 4, input1);
-    res = create_matrix(4, 4, input3);
-    identity_matrix = create_matrix(4, 4, input4);
 
-    tuple = creat_tuple(1, 2, 3, 1);
+    matrix2 = create_matrix(4, 4, input1);
+    matrix3 = create_matrix(4, 4, input2);
+
+    // printf("matrix2: %d, res: %d\n",matrix_invertiblity(matrix2), matrix_invertiblity(res));
+    // print_matrix(matrix_inverse(matrix2));
+    // print_matrix(matrix_inverse(matrix3));
+
+    identity_matrix = create_matrix(4, 4, input4);
+    num_6 = create_shearing();
+    if (!num_6)
+        return (0);
+    num_6->zy = 1;
+
+
+
+    tuple = create_point(2, 3, 4);
+    print_type(matrix_tuple_mul4x4(shearing(num_6), tuple));
+    
+    // print_type(matrix_tuple_mul4x4(identity_matrix, tuple));
     // res = sub_matrix(matrix2, 2, 1);
     // print_matrix(res);
     // printf("%f\n",matrix_cofactor(matrix1, 1, 0));
-    printf("%f\n",matrix_cofactor(matrix1, 0, 0));
-    printf("%f\n",matrix_cofactor(matrix1, 0, 1));
-    printf("%f\n",matrix_cofactor(matrix1, 0, 2));
+    // printf("%f\n",matrix_cofactor(matrix1, 0, 0));
+    // printf("%f\n",matrix_cofactor(matrix1, 0, 1));
+    // printf("%f\n",matrix_cofactor(matrix1, 0, 2));
     // printf("%f\n",matrix_cofactor(matrix1, 0, 3));
-    printf("%f\n",matrix_determinant(matrix1));
+    // printf("%f\n",matrix_determinant(matrix1));
 
-    printf("\n%f\n",matrix_cofactor(matrix2, 0, 0));
-    printf("%f\n",matrix_cofactor(matrix2, 0, 1));
-    printf("%f\n",matrix_cofactor(matrix2, 0, 2));
-    printf("%f\n",matrix_cofactor(matrix2, 0, 3));
-    printf("%f\n",matrix_determinant(matrix2));
+    // printf("\n%f\n",matrix_cofactor(matrix2, 0, 0));
+    // printf("%f\n",matrix_cofactor(matrix2, 0, 1));
+    // printf("%f\n",matrix_cofactor(matrix2, 0, 2));
+    // printf("%f\n",matrix_cofactor(matrix2, 0, 3));
+    // printf("%f\n",matrix_determinant(matrix2));
 
-    free_matrix(res);
-    free_matrix(matrix);
+    res = rotation_z(PI / 2);
+
+    // res = matrix_inverse(res);
+
+    // print_type ( matrix_tuple_mul4x4(res, tuple));
+    
+
+    free_matrix(matrix3);
+    free_matrix(matrix0);
     free(tuple);
     free_matrix(matrix1);
     free_matrix(matrix2);
