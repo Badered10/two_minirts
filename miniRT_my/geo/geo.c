@@ -6,7 +6,7 @@
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 17:17:09 by baouragh          #+#    #+#             */
-/*   Updated: 2025/01/12 18:39:58 by baouragh         ###   ########.fr       */
+/*   Updated: 2025/01/14 08:46:20 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -226,6 +226,8 @@ int color_to_int(t_tuple *color)
     int g;
     int b;
 
+    if (!color)
+        return (1);
     r = color->x * 255;
     g = color->y * 255;
     b = color->z * 255;
@@ -773,139 +775,40 @@ t_matrix *shearing(t_shearing *nums)
 
 int main()
 {
-    // t_projectile *projectile;
-    // t_environment *env;
-    // t_tuple *pose;
-    // t_tuple *speed;
-    // t_tuple *gravity;
-    // t_tuple *wind;
-    // void *mlx;
-    // void *win;
-    // void *img;
-    // t_canvas *canvas;
-    // t_tuple  *red;
+    void *mlx;
+    void *win;
+    t_tuple *color;
+    t_tuple *point;
+    t_matrix *rotation;
+    t_canvas *can;
+    int cx;
+    int cy;
+    int i;
+    int r;
 
-    // pose = create_point(0, 1, 0);
-    // speed = create_vector(1, 1.8, 0);
-    // gravity = create_vector(0, -0.1, 0);
-    // wind = create_vector(-0.01, 0, 0);
-    // env = create_environment(gravity, wind);
-    // projectile = create_projectile(pose, mul_tuple(norm_tuple(speed), 11.25));
-    // mlx = mlx_init();
-    // if (!mlx)
-    //     return(-1);
-    // win = mlx_new_window(mlx, 900, 550, "test");
-    // if (!win)
-    //     return (-2);
-    // canvas = create_canvas(900, 550, mlx);
-    // if (!canvas)
-    //     return (-3);
-    
-    // red = create_color(1, 0, 0);
-
-    // while (projectile->position->y > 0)
-    // {
-    //     projectile = tick(env, projectile);
-    //     print_type(projectile->position);
-    //     if (projectile->position->y < 0 || projectile->position->x < 0)
-    //         break;
-    //     if (900 - projectile->position->x >= 0 && 550 - projectile->position->y >= 0)
-    //     {
-    //         write_pixel(canvas, 900 - projectile->position->x, 550 - projectile->position->y, red);
-    //         printf("%f, %f \n", 900 - projectile->position->x, 550 - projectile->position->y);
-    //     }
-    // }
-
-    // print_type(pixel_at(canvas, 0, 0));
-    // print_type(pixel_at(canvas, 1, 1));
-    // mlx_put_image_to_window(mlx, win, canvas->img->img, 0, 0);
-    // mlx_loop(mlx);
-    t_matrix *matrix0;
-    t_matrix *matrix1;
-    t_matrix *matrix2;
-    t_matrix *matrix3;
-    t_matrix *res;
-    t_matrix *mul;
-    t_matrix *identity_matrix;
-    t_tuple *tuple;
-    t_shearing *num_6;
-    
-    double arr5[2][2] = {{1,5}, {-3,2}};
-
-    double arr1[3][3] = {{1,2,6}, {-5,8,-4}, {2,6,4}};
-
-    double arr[4][4] = {{8,-5,9,2}, {7,5,6,1}, {-6,0,9,6}, {-3,0,-9,-4}};
-    double arr2[4][4] = {{9,3,0,9}, {-5,-2,-6,-3}, {-4,9,6,4}, {-7,6,6,2}};
-    
-    // double arr[4][4] = {{1,2,3,4}, {5,6,7,8}, {9,8,7,6}, {5,4,3,2}};
-    // double arr2[4][4] = {{-2,1,2,3}, {3,2,1,-1}, {4,3,6,5}, {1,2,7,8}};
-    
-
-    double arr3[4][4] = {{1,2,3,4}, {2,4,4,2}, {8,6,4,1}, {0,0,0,1}};
-
-    double arr4[4][4] = {{1,0,0,0}, {0,1,0,0}, {0,0,1,0}, {0,0,0,1}};
-
-
-    const double *input5[2] = {arr5[0], arr5[1]};
-    const double *input0[3] = {arr1[0], arr1[1], arr1[2]};
-
-    
-    const double *input1[4] = {arr[0], arr[1], arr[2], arr[3]};
-    const double *input2[4] = {arr2[0], arr2[1], arr2[2], arr2[3]};
-    
-    const double *input3[4] = {arr3[0], arr3[1], arr3[2], arr3[3]};
-    const double *input4[4] = {arr4[0], arr4[1], arr4[2], arr4[3]};
-
-    matrix0 = create_matrix(2, 2, input5);
-    matrix1 = create_matrix(3, 3, input0);
-
-    matrix2 = create_matrix(4, 4, input1);
-    matrix3 = create_matrix(4, 4, input2);
-
-    // printf("matrix2: %d, res: %d\n",matrix_invertiblity(matrix2), matrix_invertiblity(res));
-    // print_matrix(matrix_inverse(matrix2));
-    // print_matrix(matrix_inverse(matrix3));
-
-    identity_matrix = create_matrix(4, 4, input4);
-    num_6 = create_shearing();
-    if (!num_6)
-        return (0);
-    num_6->zy = 1;
-
-
-
-    tuple = create_point(2, 3, 4);
-    print_type(matrix_tuple_mul4x4(shearing(num_6), tuple));
-    
-    // print_type(matrix_tuple_mul4x4(identity_matrix, tuple));
-    // res = sub_matrix(matrix2, 2, 1);
-    // print_matrix(res);
-    // printf("%f\n",matrix_cofactor(matrix1, 1, 0));
-    // printf("%f\n",matrix_cofactor(matrix1, 0, 0));
-    // printf("%f\n",matrix_cofactor(matrix1, 0, 1));
-    // printf("%f\n",matrix_cofactor(matrix1, 0, 2));
-    // printf("%f\n",matrix_cofactor(matrix1, 0, 3));
-    // printf("%f\n",matrix_determinant(matrix1));
-
-    // printf("\n%f\n",matrix_cofactor(matrix2, 0, 0));
-    // printf("%f\n",matrix_cofactor(matrix2, 0, 1));
-    // printf("%f\n",matrix_cofactor(matrix2, 0, 2));
-    // printf("%f\n",matrix_cofactor(matrix2, 0, 3));
-    // printf("%f\n",matrix_determinant(matrix2));
-
-    res = rotation_z(PI / 2);
-
-    // res = matrix_inverse(res);
-
-    // print_type ( matrix_tuple_mul4x4(res, tuple));
-    
-
-    free_matrix(matrix3);
-    free_matrix(matrix0);
-    free(tuple);
-    free_matrix(matrix1);
-    free_matrix(matrix2);
-    free_matrix(identity_matrix);
-    return 0;
-
+    mlx = mlx_init();
+    if (!mlx)
+        return (1);
+    can = create_canvas(400, 400, mlx);
+    if (!can)
+        return (1);
+    win = mlx_new_window(mlx, can->height, can->width, "WINDOW");
+    if (!win)
+        return (1);
+    color = create_color(1, 1, 1);
+    r = 150;
+    point = create_point(1, 0, 0);
+    i = -1;
+    cx = can->height / 2;
+    cy = can->width / 2;
+    while (++i < 12)
+    {
+        rotation = rotation_y(deg_to_rad(30));
+        point = matrix_tuple_mul4x4(rotation, point);
+        print_type(point);
+        write_pixel(can, point->x * r + cx, point->z * r + cy, color);
+    }
+    mlx_put_image_to_window(mlx, win ,can->img->img, 0, 0);
+    mlx_loop(mlx);
+    return (0);
 }
