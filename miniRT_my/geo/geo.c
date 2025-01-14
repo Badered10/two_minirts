@@ -6,7 +6,7 @@
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 17:17:09 by baouragh          #+#    #+#             */
-/*   Updated: 2025/01/14 08:46:20 by baouragh         ###   ########.fr       */
+/*   Updated: 2025/01/14 10:47:46 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,8 @@
 // DEBUG FUNCTION-------------------------------------------------------------------------------
 void print_type(t_tuple *tuple)
 {
+    if (!tuple)
+        return (printf("ERR TUPLE NULL\n"), (void)0);
     if (tuple->w == 0)
         printf("is Vector : x = %f, y = %f, z = %f, w = %d\n",
             tuple->x, tuple->y, tuple->z, tuple->w);
@@ -771,44 +773,149 @@ t_matrix *shearing(t_shearing *nums)
     return (matrix);
 }
 
+t_ray * create_ray(t_tuple *origin, t_tuple *direction)
+{
+    t_ray *ray;
+    
+    if (!origin || !direction)
+        return (NULL);
+    ray = malloc(sizeof (t_ray));
+    if(!ray)
+        return (NULL);
+    ray->origin = origin;
+    ray->direction = direction;
+    return (ray);
+}
+
+t_tuple * ray_position(t_ray *ray, double t)
+{
+    t_tuple *pose;
+    t_tuple *a_move;
+
+    if (!ray || !ray->direction || !ray->origin)
+        return (NULL);
+    a_move = mul_tuple(ray->direction, t);
+    if (!a_move)
+        return (NULL);
+    pose = add_tuple(ray->origin, a_move);
+    free(a_move);
+    return (pose);
+}
+
+void free_ray(t_ray *ray)
+{
+    if (!ray)
+        return;
+    if (ray->origin)
+        free(ray->origin);
+    if (ray->direction)
+        free(ray->direction);
+    free(ray);
+}
+
+t_sphere *create_sphere(void)
+{
+    t_sphere *sphere;
+    
+    sphere = malloc(sizeof(t_sphere));
+    if (!sphere)
+        return (NULL);
+    sphere->center = create_point(0, 0, 0);
+    if (!sphere->center)
+        return (free(sphere), NULL);
+    sphere->r = 1;
+    return (sphere);
+}
+
+t_intersect *creat_intersect(double i1, double i2, bool init)
+{
+    t_intersect *intr;
+    
+    intr = malloc (sizeof(t_intersect));
+    if (!intr)
+        return (NULL);
+    intr->value = malloc(sizeof(double) * 2);
+    if (!intr->value)
+        return(free(intr), NULL);
+    if (init)
+    {
+        intr->count = 2;
+        intr->value[0] = i1;
+        intr->value[1] = i2;
+    }
+    else
+    {
+        intr->count = 0;
+        intr->value[0] = 0;
+        intr->value[1] = 0;
+    }
+    return (intr);
+}
+
+t_intersect *intersect_sphere(t_sphere *sphere, t_ray *ray)
+{
+    t_intersect *intr;
+    t_tuple *sphere_to_ray;
+    double a;
+    double b;
+    double c;
+    double discriminant;
+    
+    if (!sphere || !ray)
+        return (NULL);
+    intr = creat_intersect(0, 0, 0);
+    if (!intr)
+        return (NULL);
+    sphere_to_ray = sub_tuple(ray->origin, sphere->center);
+    a = dot_tuple(ray->direction, ray->direction);
+    b = 2 * dot_tuple(ray->direction, sphere_to_ray);
+    c = dot_tuple(sphere_to_ray, sphere_to_ray) - 1;
+    discriminant = b * b - 4 * a * c;
+    free(sphere_to_ray);
+    if (discriminant < 0)
+        return (intr);
+    intr->value[0] = (-b - sqrt(discriminant)) / (2 * a);
+    intr->value[1] = (-b + sqrt(discriminant)) / (2 * a);
+    return (intr);
+}
+
+t_intersection *intersection(double t, int type)
+{
+    t_intersection *res;
+    
+    res = malloc(sizeof(t_intersection));
+    if (!res)
+        return (NULL);
+    res->t = t;
+    res->type = type;
+    return (res);
+}
+
+t_intersect * intersections(t_intersection *a, t_intersection *b)
+{
+    return (creat_intersect(a->t, b->t, 1));
+}
 // MAIN -----------------------------------------------------------------------
 
 int main()
 {
-    void *mlx;
-    void *win;
-    t_tuple *color;
-    t_tuple *point;
-    t_matrix *rotation;
-    t_canvas *can;
-    int cx;
-    int cy;
-    int i;
-    int r;
+    t_tuple *o;
+    t_tuple *dir;
+    t_ray *ray;
+    t_sphere *s;
+    t_intersect * xs;
 
-    mlx = mlx_init();
-    if (!mlx)
-        return (1);
-    can = create_canvas(400, 400, mlx);
-    if (!can)
-        return (1);
-    win = mlx_new_window(mlx, can->height, can->width, "WINDOW");
-    if (!win)
-        return (1);
-    color = create_color(1, 1, 1);
-    r = 150;
-    point = create_point(1, 0, 0);
-    i = -1;
-    cx = can->height / 2;
-    cy = can->width / 2;
-    while (++i < 12)
+    o = create_point(0, 0, 5);
+    dir = create_vector(0, 0, 1);
+    ray = create_ray(o, dir);
+    s = create_sphere();
+    
+    xs = intersections(intersection(1, 0), intersection(2, 0));
+    printf("%d\n",xs->count);
+    if (xs->count)
     {
-        rotation = rotation_y(deg_to_rad(30));
-        point = matrix_tuple_mul4x4(rotation, point);
-        print_type(point);
-        write_pixel(can, point->x * r + cx, point->z * r + cy, color);
+        printf("%f\n",xs->value[0]);
+        printf("%f\n",xs->value[1]);
     }
-    mlx_put_image_to_window(mlx, win ,can->img->img, 0, 0);
-    mlx_loop(mlx);
     return (0);
 }

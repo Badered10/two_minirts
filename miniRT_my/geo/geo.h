@@ -86,6 +86,31 @@ typedef struct s_shearing
     double zy;
 } t_shearing;
 
+typedef struct s_ray
+{
+    t_tuple *origin;
+    t_tuple *direction;
+} t_ray;
+
+typedef struct s_sphere
+{
+    t_tuple *center;
+    double r;
+} t_sphere;
+
+typedef struct s_intersect
+{
+    int count;
+    double *value;
+} t_intersect;
+
+typedef struct s_intersection
+{
+    double t;
+    int type;
+} t_intersection;
+
+
 
 
 t_tuple *create_tuple(double x, double y, double z, double w);
