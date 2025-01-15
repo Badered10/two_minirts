@@ -102,6 +102,7 @@ typedef struct s_intersect
 {
     int count;
     double *value;
+    void   *object;
 } t_intersect;
 
 typedef struct s_intersection

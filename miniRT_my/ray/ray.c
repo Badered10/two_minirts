@@ -6,23 +6,23 @@
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/27 16:03:04 by baouragh          #+#    #+#             */
-/*   Updated: 2025/01/01 17:47:17 by baouragh         ###   ########.fr       */
+/*   Updated: 2025/01/15 09:27:08 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ray.h"
 
-t_ray create_ray(t_point3 orig, t_vec3 dir)
-{
-    t_ray ray;
+// t_ray create_ray(t_point3 orig, t_vec3 dir)
+// {
+//     t_ray ray;
 
-    ray.orig = orig;
-    ray.dir = dir;
+//     ray.orig = orig;
+//     ray.dir = dir;
 
-    return (ray);
-}
+//     return (ray);
+// }
 
-t_vec3 ray_at(t_ray ray, double t)
-{
-    return (vec3_add(ray.orig, vec3_scale(ray.dir, t)));
-}
+// t_vec3 ray_at(t_ray ray, double t)
+// {
+//     return (vec3_add(ray.orig, vec3_scale(ray.dir, t)));
+// }

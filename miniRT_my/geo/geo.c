@@ -6,11 +6,11 @@
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 17:17:09 by baouragh          #+#    #+#             */
-/*   Updated: 2025/01/14 10:47:46 by baouragh         ###   ########.fr       */
+/*   Updated: 2025/01/15 11:13:14 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-
+#include "../libft/libft.h"
 #include "geo.h"
 
 // DEBUG FUNCTION-------------------------------------------------------------------------------
@@ -827,7 +827,7 @@ t_sphere *create_sphere(void)
     return (sphere);
 }
 
-t_intersect *creat_intersect(double i1, double i2, bool init)
+t_intersect *create_intersect(double i1, double i2, bool init)
 {
     t_intersect *intr;
     
@@ -863,9 +863,10 @@ t_intersect *intersect_sphere(t_sphere *sphere, t_ray *ray)
     
     if (!sphere || !ray)
         return (NULL);
-    intr = creat_intersect(0, 0, 0);
+    intr = create_intersect(0, 0, 0);
     if (!intr)
         return (NULL);
+    intr->object = sphere;
     sphere_to_ray = sub_tuple(ray->origin, sphere->center);
     a = dot_tuple(ray->direction, ray->direction);
     b = 2 * dot_tuple(ray->direction, sphere_to_ray);
@@ -874,6 +875,7 @@ t_intersect *intersect_sphere(t_sphere *sphere, t_ray *ray)
     free(sphere_to_ray);
     if (discriminant < 0)
         return (intr);
+    intr->count = 2;
     intr->value[0] = (-b - sqrt(discriminant)) / (2 * a);
     intr->value[1] = (-b + sqrt(discriminant)) / (2 * a);
     return (intr);
@@ -891,31 +893,22 @@ t_intersection *intersection(double t, int type)
     return (res);
 }
 
-t_intersect * intersections(t_intersection *a, t_intersection *b)
-{
-    return (creat_intersect(a->t, b->t, 1));
-}
 // MAIN -----------------------------------------------------------------------
 
 int main()
 {
-    t_tuple *o;
-    t_tuple *dir;
     t_ray *ray;
+    t_tuple *origin;
+    t_tuple *dir;
     t_sphere *s;
     t_intersect * xs;
 
-    o = create_point(0, 0, 5);
+    origin = create_point(0, 0, -5);
     dir = create_vector(0, 0, 1);
-    ray = create_ray(o, dir);
+    ray = create_ray(origin, dir);
     s = create_sphere();
-    
-    xs = intersections(intersection(1, 0), intersection(2, 0));
-    printf("%d\n",xs->count);
-    if (xs->count)
-    {
-        printf("%f\n",xs->value[0]);
-        printf("%f\n",xs->value[1]);
-    }
+    xs = intersect_sphere(s, ray);
+
+    printf("%f\n", )
     return (0);
 }
