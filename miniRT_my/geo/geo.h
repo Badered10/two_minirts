@@ -18,13 +18,13 @@
 #endif
 
 #ifdef POINT
-#undef
+#undef POINT
 #endif
 
 #define POINT 1
 
 #ifdef VEC
-#undef
+#undef VEC
 #endif
 
 #define VEC 0
@@ -32,6 +32,11 @@
 #define EPSILON 0.00001
 #define PI 3.14159265359
 
+
+typedef enum s_type
+{
+    SPHERE
+} e_type;
 
 typedef struct s_tuple
 {
@@ -98,17 +103,28 @@ typedef struct s_sphere
     double r;
 } t_sphere;
 
+
+typedef union s_object
+{
+    t_sphere *sphere;
+} t_object;
+
+typedef struct s_data
+{
+    t_object *data;
+    e_type type;
+} t_data;
+
 typedef struct s_intersect
 {
-    int count;
-    double *value;
-    void   *object;
+    int     count;
+    int     *value;
 } t_intersect;
 
 typedef struct s_intersection
 {
     double t;
-    int type;
+    t_data *object;
 } t_intersection;
 
 
