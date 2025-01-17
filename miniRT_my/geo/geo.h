@@ -104,16 +104,16 @@ typedef struct s_sphere
 } t_sphere;
 
 
-typedef union s_object
+typedef union s_shape
 {
     t_sphere *sphere;
-} t_object;
+} t_shape;
 
-typedef struct s_data
+typedef struct s_object
 {
-    t_object *data;
+    t_shape *shape;
     e_type type;
-} t_data;
+} t_object;
 
 typedef struct s_intersect
 {
@@ -124,7 +124,7 @@ typedef struct s_intersect
 typedef struct s_intersection
 {
     double t;
-    t_data *object;
+    t_object *object;
 } t_intersection;
 
 

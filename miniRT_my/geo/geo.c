@@ -6,7 +6,7 @@
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 17:17:09 by baouragh          #+#    #+#             */
-/*   Updated: 2025/01/17 15:47:47 by baouragh         ###   ########.fr       */
+/*   Updated: 2025/01/17 17:30:33 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -867,7 +867,7 @@ t_intersect *intersect(t_object *object, t_ray *ray)
     if (!intr)
         return (NULL);
     
-    sphere_to_ray = sub_tuple(ray->origin, object->sphere->center);
+    sphere_to_ray = sub_tuple(ray->origin, object->shape->sphere->center);
     a = dot_tuple(ray->direction, ray->direction);
     b = 2 * dot_tuple(ray->direction, sphere_to_ray);
     c = dot_tuple(sphere_to_ray, sphere_to_ray) - 1;
@@ -886,36 +886,50 @@ void intersection(double t, t_object *object, e_type type, t_list **list)
     t_list *node;
     t_intersection *res;
     
-    if (!object || !list)
+    if (!object || !list || !object->shape)
         return ;
     
     res = malloc(sizeof(t_intersection));
     if (!res)
         return ;
     res->t = t;
-    res->object = malloc(sizeof(t_data));
+    res->object = malloc(sizeof(t_object));
     if (!res->object)
         return (free(res),(void)0);
-    res->object->data = object;
+    res->object = object;
     res->object->type = type;
     node = ft_lstnew(res);
     if (!node)
         return(free(res->object), free(res), (void)0);
     ft_lstadd_back(list, node);
 }
+t_shape *create_shape(e_type type)
+{
+    t_shape *shape;
 
-t_object *create_object(void *data, e_type type)
+    shape = malloc(sizeof(t_shape));
+    if (!shape)
+        return (NULL);
+    if (type == SPHERE)
+    {
+        shape->sphere = create_sphere();
+        if (!shape)
+            return (NULL);
+    }
+    return (shape);
+}
+
+t_object *create_object(e_type type)
 {
     t_object *object;
     
     object = NULL;
-    if (!data)
-        return (NULL);
     object = malloc(sizeof(t_object));
     if (!object)
         return (NULL);
-    if (type == SPHERE)
-        object->sphere = data;
+    object->shape = create_shape(type);
+    if (!object->shape)
+        return (free(object), NULL);
     return (object);
 }
 
@@ -930,6 +944,7 @@ void print_intersections(t_list *list)
     while (list)
     {
         printf("list[%d].t = %f\n",i ,((t_intersection *)(list->content))->t);
+        printf("list[%d].object = %p\n",i ,((t_intersection *)(list->content))->object);
         list = list->next;
         i++;
     } 
@@ -948,8 +963,8 @@ void print_intersect(t_intersect *xs)
 
 int main()
 {
+    t_shape *sphere;
     t_object *object;
-    t_sphere *s;
     t_list *list;
     t_intersect *xs;
     t_ray *ray;
@@ -958,16 +973,13 @@ int main()
     
     object = NULL;
     list = NULL;
-    
     origin = create_point(0, 0 , -5);
     dir = create_vector(0, 0 , 1);
     ray = create_ray(origin, dir);
-    s = create_sphere();
-    object = create_object(s, SPHERE);
-    intersection(1, object, SPHERE, &list);
-    intersection(2, object, SPHERE, &list);
-
-    xs = intersect(s, ray);
+    object = create_object(SPHERE);
+    xs = intersect(object, ray);
+    intersection(xs->value[0], object, SPHERE, &list);
+    intersection(xs->value[1], object, SPHERE, &list);
 
     print_intersections(list);
     
