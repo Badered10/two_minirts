@@ -6,7 +6,7 @@
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 17:17:09 by baouragh          #+#    #+#             */
-/*   Updated: 2025/01/17 17:30:33 by baouragh         ###   ########.fr       */
+/*   Updated: 2025/01/21 21:47:17 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -827,34 +827,21 @@ t_sphere *create_sphere(void)
     return (sphere);
 }
 
-t_intersect *create_intersect(double i1, double i2, bool init)
+t_intersect *create_intersect(void)
 {
     t_intersect *intr;
     
     intr = malloc (sizeof(t_intersect));
     if (!intr)
         return (NULL);
-    intr->value = malloc(sizeof(double) * 2);
-    if (!intr->value)
-        return(free(intr), NULL);
-    if (init)
-    {
-        intr->count = 2;
-        intr->value[0] = i1;
-        intr->value[1] = i2;
-    }
-    else
-    {
-        intr->count = 0;
-        intr->value[0] = 0;
-        intr->value[1] = 0;
-    }
+    intr->count = -1;
+    intr->object = NULL;
     return (intr);
 }
 
 t_intersect *intersect(t_object *object, t_ray *ray)
 {
-    t_intersect *intr;
+    t_intersect *intr;        
     t_tuple *sphere_to_ray;
     double a;
     double b;
@@ -863,10 +850,9 @@ t_intersect *intersect(t_object *object, t_ray *ray)
     
     if (!object || !ray)
         return (NULL);
-    intr = create_intersect(0, 0, 0);
+    intr = create_intersect();
     if (!intr)
         return (NULL);
-    
     sphere_to_ray = sub_tuple(ray->origin, object->shape->sphere->center);
     a = dot_tuple(ray->direction, ray->direction);
     b = 2 * dot_tuple(ray->direction, sphere_to_ray);
@@ -875,9 +861,10 @@ t_intersect *intersect(t_object *object, t_ray *ray)
     free(sphere_to_ray);
     if (discriminant < 0)
         return (intr);
+    intr->object = object;
     intr->count = 2;
-    intr->value[0] = (-b - sqrt(discriminant)) / (2 * a);
-    intr->value[1] = (-b + sqrt(discriminant)) / (2 * a);
+    intr->t1 = (-b - sqrt(discriminant)) / (2 * a);
+    intr->t2 = (-b + sqrt(discriminant)) / (2 * a);
     return (intr);
 }
 
@@ -943,8 +930,8 @@ void print_intersections(t_list *list)
     printf("list.size = %d\n",ft_lstsize(list));
     while (list)
     {
-        printf("list[%d].t = %f\n",i ,((t_intersection *)(list->content))->t);
-        printf("list[%d].object = %p\n",i ,((t_intersection *)(list->content))->object);
+        printf("list[%d]->t = %f\n",i ,((t_intersection *)(list->content))->t);
+        printf("list[%d]->object = %p\n",i ,((t_intersection *)(list->content))->object);
         list = list->next;
         i++;
     } 
@@ -955,8 +942,29 @@ void print_intersect(t_intersect *xs)
     if (!xs)
         return;
     printf("xs.count = %d\n",xs->count);
-    printf("xs[0].object = %d\n",xs->value[0]);
-    printf("xs[1].object = %d\n",xs->value[1]);
+    printf("xs->object = %p\n",xs->object);
+    printf("xs->t1 = %d\n",xs->t1);
+    printf("xs->t2 = %d\n",xs->t2);
+}
+
+double hit(t_list *intr_list) // return a positive num if there is intersction accure , otherwise return negative number
+{
+    double res;
+    double old;
+    t_intersection *intr;
+    
+
+    res = -1;
+    old = 0;
+    while (intr_list)
+    {
+        intr = intr_list->content;
+        old = intr->t;
+        if ((old > 0 && old < res) || res < 0)
+            res = old;
+        intr_list = intr_list->next;
+    }
+    return (res);
 }
 
 // MAIN -----------------------------------------------------------------------
@@ -978,10 +986,17 @@ int main()
     ray = create_ray(origin, dir);
     object = create_object(SPHERE);
     xs = intersect(object, ray);
-    intersection(xs->value[0], object, SPHERE, &list);
-    intersection(xs->value[1], object, SPHERE, &list);
-
-    print_intersections(list);
-    
+    if(xs->count != -1)
+    {
+        intersection(xs->t1, object, SPHERE, &list);
+        intersection(xs->t2, object, SPHERE, &list);
+        intersection(-1, object, SPHERE, &list);
+        intersection(-2, object, SPHERE, &list);
+        intersection(-3, object, SPHERE, &list);
+        hit(list);
+        print_intersections(list);
+    }
+    else
+        print_intersect(xs);
     return (0);
 }
