@@ -6,7 +6,7 @@
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 17:17:09 by baouragh          #+#    #+#             */
-/*   Updated: 2025/01/21 21:47:17 by baouragh         ###   ########.fr       */
+/*   Updated: 2025/01/24 10:44:35 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -277,6 +277,37 @@ t_tuple *pixel_at(t_canvas *canvas, int x, int y)
 }
 
 // MATRIXS INTO THE SCENE------------------------------------------------------------
+
+void free_old(double **res, int i)
+{
+    if (!res)
+        return ;
+    while (i >= 0)
+    {
+        free(res[i]);
+        i--;
+    }
+    free(res);
+}
+
+double **creat_arr(int rows, int cols)
+{
+    double **res;
+    int i;
+
+    res = malloc(sizeof(double *) * rows);
+    if (!res)
+        return (NULL);
+    i = -1;
+    while (++i < cols)
+    {
+        res[i] = malloc(sizeof(double) * cols);
+        if (!res[i])
+            return( free_old(res, i), NULL);
+    }
+    return (res);
+}
+
 void free_matrix(t_matrix *matrix)
 {
     int i;
@@ -293,17 +324,6 @@ void free_matrix(t_matrix *matrix)
     free(matrix);
 }
 
-void free_old(double **res, int i)
-{
-    if (!res)
-        return ;
-    while (i >= 0)
-    {
-        free(res[i]);
-        i--;
-    }
-    free(res);
-}
 
 double **set_zeros(int rows, int colums)
 {
@@ -333,7 +353,7 @@ double **set_zeros(int rows, int colums)
     return (res);
 }
 
-double **duplicate_array(int rows, int colums, const double *arr[])
+double **duplicate_array(int rows, int colums, const double **arr)
 {
     int i;
     int j;
@@ -361,7 +381,7 @@ double **duplicate_array(int rows, int colums, const double *arr[])
     return (res);
 }
 
-t_matrix *create_matrix(int rows, int colums, const double *arr[])
+t_matrix *create_matrix(int rows, int colums, const double **arr)
 {
     t_matrix *matrix;
 
@@ -816,7 +836,15 @@ void free_ray(t_ray *ray)
 t_sphere *create_sphere(void)
 {
     t_sphere *sphere;
-    
+    double **arr;
+
+    arr = creat_arr(4, 4);
+    if (!arr)
+        return (NULL);
+    arr[0][0] = 1;
+    arr[1][1] = 1;
+    arr[2][2] = 1;
+    arr[3][3] = 1;
     sphere = malloc(sizeof(t_sphere));
     if (!sphere)
         return (NULL);
@@ -824,6 +852,7 @@ t_sphere *create_sphere(void)
     if (!sphere->center)
         return (free(sphere), NULL);
     sphere->r = 1;
+    sphere->transform = create_matrix(4, 4, (const double **)arr);
     return (sphere);
 }
 
@@ -967,36 +996,72 @@ double hit(t_list *intr_list) // return a positive num if there is intersction a
     return (res);
 }
 
+t_ray *transform(t_ray *ray, t_matrix *matrix)
+{
+    t_ray *res;
+    t_tuple *orgin;
+    t_tuple *dir;
+
+    if (!ray || !matrix)
+        return (NULL);
+    res = create_ray(orgin, dir);
+    res->direction =  matrix_tuple_mul4x4(matrix, ray->direction);
+    res->origin = matrix_tuple_mul4x4(matrix, ray->origin);
+    return (res);
+}
+
+int  set_transform(t_object *object, t_matrix *matrix)
+{
+    if (!object || !object->shape || !matrix)
+        return (-1);
+    if (object->type == SPHERE)
+        object->shape->sphere->transform = matrix;
+    return (0);
+}
 // MAIN -----------------------------------------------------------------------
 
 int main()
 {
-    t_shape *sphere;
     t_object *object;
-    t_list *list;
-    t_intersect *xs;
+    // t_list *list;
+    // t_intersect *xs;
+    t_matrix *trans;
+    t_matrix *scale;
     t_ray *ray;
+    t_ray *ray2;
     t_tuple *origin;
     t_tuple *dir;
     
-    object = NULL;
-    list = NULL;
-    origin = create_point(0, 0 , -5);
-    dir = create_vector(0, 0 , 1);
+    // object = NULL;
+    // list = NULL;
+    origin = create_point(1, 2 , 3);
+    dir = create_vector(0, 1 , 0);
     ray = create_ray(origin, dir);
+    trans = translation(2, 3, 4);
+    scale = scaling(2, 3, 4);
+    
+    // ray2 = transform(ray, trans);
+    ray2 = transform(ray, scale);
+    // print_type(ray->origin);
+    // print_type(ray->direction);
+    // print_type(ray2->origin);
+    // print_type(ray2->direction);
     object = create_object(SPHERE);
-    xs = intersect(object, ray);
-    if(xs->count != -1)
-    {
-        intersection(xs->t1, object, SPHERE, &list);
-        intersection(xs->t2, object, SPHERE, &list);
-        intersection(-1, object, SPHERE, &list);
-        intersection(-2, object, SPHERE, &list);
-        intersection(-3, object, SPHERE, &list);
-        hit(list);
-        print_intersections(list);
-    }
-    else
-        print_intersect(xs);
+    set_transform(object ,trans);
+    print_matrix(object->shape->sphere->transform);
+    // xs = intersect(object, ray);
+    // if(xs->count != -1)
+    // {
+    //     intersection(xs->t1, object, SPHERE, &list);
+    //     intersection(xs->t2, object, SPHERE, &list);
+    //     intersection(-1, object, SPHERE, &list);
+    //     intersection(-2, object, SPHERE, &list);
+    //     intersection(-3, object, SPHERE, &list);
+    //     hit(list);
+    //     print_intersections(list);
+    // }
+    // else
+    //     print_intersect(xs);
+
     return (0);
 }

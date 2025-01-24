@@ -100,6 +100,7 @@ typedef struct s_ray
 typedef struct s_sphere
 {
     t_tuple *center;
+    t_matrix *transform;
     double r;
 } t_sphere;
 
