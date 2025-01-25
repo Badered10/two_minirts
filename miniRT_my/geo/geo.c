@@ -6,7 +6,7 @@
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 17:17:09 by baouragh          #+#    #+#             */
-/*   Updated: 2025/01/25 11:00:45 by baouragh         ###   ########.fr       */
+/*   Updated: 2025/01/25 12:28:59 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1051,21 +1051,32 @@ int  set_transform(t_object *object, t_matrix *matrix)
     return (0);
 }
 
-t_tuple *normal_at(t_object *object, t_tuple *point)
+t_tuple *normal_at(t_object *object, t_tuple *world_point)
 {
+    t_matrix *inverse;
+    t_matrix *transpose;
     t_tuple *center;
-    t_tuple *sub;
+    t_tuple *object_point;
+    t_tuple *object_normal;
+    t_tuple *world_normal;
     t_tuple *res;
 
     center = create_point(0, 0, 0);
     if (!center)
         return (NULL);
-    sub = sub_tuple(point, center);
-    if (!sub)
-        return (free(center), NULL);
-    res = norm_tuple(sub);
+    inverse = matrix_inverse(object->shape->sphere->transform);
+    object_point = matrix_tuple_mul4x4(inverse, world_point);
+    object_normal = sub_tuple(object_point, center);
+    transpose = matrix_transpose4x4(inverse);
+    world_normal = matrix_tuple_mul4x4(transpose, object_normal);
+    world_normal->w = 0;
+    res = norm_tuple(world_normal);
     free(center);
-    free(sub);
+    free(object_point);
+    free(object_normal);
+    free(world_normal);
+    free_matrix(inverse);
+    free_matrix(transpose);
     return (res);
 }
 
@@ -1142,11 +1153,16 @@ int main()
 {
     t_object *obj;
     t_tuple *point;
+    t_matrix *trans;
+    t_matrix *scale;
 
     obj = create_object(SPHERE);
     if (!obj)
         return (-1);
-    point = create_point(sqrt(3)/3, sqrt(3)/3, sqrt(3)/3);
+    // trans = translation(0, 1, 0);
+    scale = matrix_multiply(scaling(1, 0.5, 1), rotation_z(PI /5), 4);
+    set_transform(obj, scale);
+    point = create_point(0, sqrt(2)/2, -sqrt(2)/2);
     if (!point)
         return (-1);
     print_type(normal_at(obj, point));
