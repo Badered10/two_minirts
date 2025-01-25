@@ -199,7 +199,7 @@ void	*mlx_int_parse_xpm(mlx_ptr_t *xvar,void *info,int info_size,char *(*f)())
 					1, XYPixmap, 0, clip_data,
 					width, height, 8, (width+7)/8)) )
 	    RETURN;
-	  memset(clip_data, 0xFF, 4*width*height);
+	 ft_memset(clip_data, 0xFF, 4*width*height);
 	}
       */
       if (method)
@@ -289,12 +289,12 @@ void	mlx_int_file_get_rid_comment(char *ptr, int size)
   while ((com_begin = mlx_int_str_str_cote(ptr,"/*",size))!=-1)
     {
       com_end = mlx_int_str_str(ptr+com_begin+2,"*/",size-com_begin-2);
-      memset(ptr+com_begin,' ',com_end+4);
+     ft_memset(ptr+com_begin,' ',com_end+4);
     }
   while ((com_begin = mlx_int_str_str_cote(ptr,"//",size))!=-1)
     {
       com_end = mlx_int_str_str(ptr+com_begin+2,"\n",size-com_begin-2);
-      memset(ptr+com_begin,' ',com_end+3);
+     ft_memset(ptr+com_begin,' ',com_end+3);
     }
 }
 

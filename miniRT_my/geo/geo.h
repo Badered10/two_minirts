@@ -69,6 +69,7 @@ typedef struct	s_img
 
 typedef struct s_canvas
 {
+    void *mlx;
     int width;
     int height;
     t_img *img;
@@ -148,5 +149,5 @@ double  dot_tuple(t_tuple *a, t_tuple *b);
 double matrix_determinant(t_matrix *matrix);
 double matrix_minor(t_matrix *matrix, int row, int column);
 double matrix_cofactor(t_matrix *matrix, int row, int column);
-
+t_ray *transform(t_ray *ray, t_matrix *matrix);
 #endif

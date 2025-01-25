@@ -6,7 +6,7 @@
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 17:17:09 by baouragh          #+#    #+#             */
-/*   Updated: 2025/01/24 10:44:35 by baouragh         ###   ########.fr       */
+/*   Updated: 2025/01/25 11:00:45 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -187,9 +187,12 @@ t_canvas * create_canvas(int width , int height, void *mlx_ptr)
 {
     t_canvas *canvas;
 
+    if (!mlx_ptr)
+        return (NULL);
     canvas = malloc(sizeof(t_canvas));
     if (!canvas)
         return (NULL);
+    canvas->mlx = mlx_ptr;
     canvas->width = width;
     canvas->height = height;
     canvas->img = new_img(width, height, mlx_ptr);
@@ -263,9 +266,9 @@ t_tuple * int_to_color(int color)
     return (create_color(r, g, b));
 }
 
-void write_pixel(t_canvas *canvas, int x, int y, t_tuple *red)
+void write_pixel(t_canvas *canvas, int x, int y, t_tuple *color)
 {
-    my_mlx_pixel_put(canvas->img, x, y, color_to_int(red));
+    my_mlx_pixel_put(canvas->img, x, y, color_to_int(color));
 }
 
 t_tuple *pixel_at(t_canvas *canvas, int x, int y)
@@ -290,7 +293,7 @@ void free_old(double **res, int i)
     free(res);
 }
 
-double **creat_arr(int rows, int cols)
+double **create_arr(int rows, int cols)
 {
     double **res;
     int i;
@@ -766,7 +769,7 @@ t_shearing *create_shearing(void)
     shearing = malloc(sizeof(t_shearing));
     if (!shearing)
         return (NULL);
-    memset(shearing, 0, sizeof(t_shearing));
+   ft_memset(shearing, 0, sizeof(t_shearing));
     return (shearing);
 }
 
@@ -838,7 +841,7 @@ t_sphere *create_sphere(void)
     t_sphere *sphere;
     double **arr;
 
-    arr = creat_arr(4, 4);
+    arr = create_arr(4, 4);
     if (!arr)
         return (NULL);
     arr[0][0] = 1;
@@ -863,8 +866,10 @@ t_intersect *create_intersect(void)
     intr = malloc (sizeof(t_intersect));
     if (!intr)
         return (NULL);
-    intr->count = -1;
+    intr->count = 0;
     intr->object = NULL;
+    intr->t1 = -1;
+    intr->t2 = -1;
     return (intr);
 }
 
@@ -872,19 +877,21 @@ t_intersect *intersect(t_object *object, t_ray *ray)
 {
     t_intersect *intr;        
     t_tuple *sphere_to_ray;
+    t_ray *ray2;
     double a;
     double b;
     double c;
     double discriminant;
     
-    if (!object || !ray)
+    if (!object || !object->shape || !ray)
         return (NULL);
+    ray2 = transform(ray, matrix_inverse(object->shape->sphere->transform));
     intr = create_intersect();
     if (!intr)
         return (NULL);
-    sphere_to_ray = sub_tuple(ray->origin, object->shape->sphere->center);
-    a = dot_tuple(ray->direction, ray->direction);
-    b = 2 * dot_tuple(ray->direction, sphere_to_ray);
+    sphere_to_ray = sub_tuple(ray2->origin, object->shape->sphere->center);
+    a = dot_tuple(ray2->direction, ray2->direction);
+    b = 2 * dot_tuple(ray2->direction, sphere_to_ray);
     c = dot_tuple(sphere_to_ray, sphere_to_ray) - 1;
     discriminant = b * b - 4 * a * c;
     free(sphere_to_ray);
@@ -995,6 +1002,31 @@ double hit(t_list *intr_list) // return a positive num if there is intersction a
     }
     return (res);
 }
+double hit2(t_list *intr_list) // return a positive num if there is intersction accure , otherwise return negative number
+{
+    double res;
+    double old;
+    t_intersect *intr;
+    
+
+    res = -1;
+    old = 0;
+    while (intr_list)
+    {
+        intr = intr_list->content;
+        if (intr->count != 0)
+        {
+            if (intr->t1 < intr->t2 && (intr->t1 > 0 && intr->t2 > 0))
+                old = intr->t1;
+            else if (intr->t1 > intr->t2 && (intr->t1 > 0 && intr->t2 > 0))
+                old = intr->t2;
+            if ((old > 0 && old < res) || res < 0)
+                res = old;
+        }
+        intr_list = intr_list->next;
+    }
+    return (res);
+}
 
 t_ray *transform(t_ray *ray, t_matrix *matrix)
 {
@@ -1018,50 +1050,104 @@ int  set_transform(t_object *object, t_matrix *matrix)
         object->shape->sphere->transform = matrix;
     return (0);
 }
+
+t_tuple *normal_at(t_object *object, t_tuple *point)
+{
+    t_tuple *center;
+    t_tuple *sub;
+    t_tuple *res;
+
+    center = create_point(0, 0, 0);
+    if (!center)
+        return (NULL);
+    sub = sub_tuple(point, center);
+    if (!sub)
+        return (free(center), NULL);
+    res = norm_tuple(sub);
+    free(center);
+    free(sub);
+    return (res);
+}
+
+// TESTS
+void draw_sphere(t_canvas *can)
+{
+    t_tuple *orgin;
+    t_tuple *dir;
+    t_ray *ray;
+    t_tuple *color;
+    t_object *object;
+    t_intersect *xs;
+    t_list *list;
+    t_shearing *shr;
+    double wall_z;
+    double wall_size;
+    double pixel_size;
+    double half;
+    shr = create_shearing();
+    shr->xy = 1;
+
+    if (!can || !can->mlx || !can->img || !can->img->img)
+        return ;
+    orgin = create_point(0, 0, -5);
+    color = create_color(1, 0, 0);
+    object = create_object(SPHERE);
+    wall_z = 10;
+    wall_size = 7;
+    pixel_size = wall_size / can->height;
+    half = wall_size / 2;
+
+    object->shape->sphere->transform = matrix_multiply(shearing(shr), scaling(0.5, 1, 1), 4);
+    int y;
+    int x;
+    y = -1;
+    double world_x;
+    double world_y;
+    t_tuple *pose;
+    while (++y < can->height - 1)
+    {
+        world_y = half - pixel_size * y;
+        x = -1;
+        while (++x < can->height - 1)
+        {
+            world_x = -half + pixel_size * x;
+            pose = create_point(world_x, world_y, wall_z);
+            ray = create_ray(orgin, norm_tuple(sub_tuple(pose, orgin)));
+            xs = intersect(object, ray);
+            list = ft_lstnew(xs);
+            if (hit2(list) != -1)
+                write_pixel(can, x, y, color);
+        }
+    }
+}
 // MAIN -----------------------------------------------------------------------
+    // t_canvas *can;
+    // int canavas_pixel;
+    // void *mlx;
+    // void *win;
+
+    // mlx = mlx_init();
+    // if (!mlx)
+    //     return (-1);
+    // canavas_pixel = 200;
+    // win = mlx_new_window(mlx, canavas_pixel, canavas_pixel, "WIN");
+    // if (!win)
+    //     return (-1);
+    // can = create_canvas(canavas_pixel, canavas_pixel, mlx);
+    // draw_sphere(can);
+    // mlx_put_image_to_window(mlx, win, can->img->img, 0, 0);
+    // mlx_loop(mlx);
 
 int main()
 {
-    t_object *object;
-    // t_list *list;
-    // t_intersect *xs;
-    t_matrix *trans;
-    t_matrix *scale;
-    t_ray *ray;
-    t_ray *ray2;
-    t_tuple *origin;
-    t_tuple *dir;
-    
-    // object = NULL;
-    // list = NULL;
-    origin = create_point(1, 2 , 3);
-    dir = create_vector(0, 1 , 0);
-    ray = create_ray(origin, dir);
-    trans = translation(2, 3, 4);
-    scale = scaling(2, 3, 4);
-    
-    // ray2 = transform(ray, trans);
-    ray2 = transform(ray, scale);
-    // print_type(ray->origin);
-    // print_type(ray->direction);
-    // print_type(ray2->origin);
-    // print_type(ray2->direction);
-    object = create_object(SPHERE);
-    set_transform(object ,trans);
-    print_matrix(object->shape->sphere->transform);
-    // xs = intersect(object, ray);
-    // if(xs->count != -1)
-    // {
-    //     intersection(xs->t1, object, SPHERE, &list);
-    //     intersection(xs->t2, object, SPHERE, &list);
-    //     intersection(-1, object, SPHERE, &list);
-    //     intersection(-2, object, SPHERE, &list);
-    //     intersection(-3, object, SPHERE, &list);
-    //     hit(list);
-    //     print_intersections(list);
-    // }
-    // else
-    //     print_intersect(xs);
+    t_object *obj;
+    t_tuple *point;
 
-    return (0);
+    obj = create_object(SPHERE);
+    if (!obj)
+        return (-1);
+    point = create_point(sqrt(3)/3, sqrt(3)/3, sqrt(3)/3);
+    if (!point)
+        return (-1);
+    print_type(normal_at(obj, point));
 }
