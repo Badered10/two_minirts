@@ -98,10 +98,20 @@ typedef struct s_ray
     t_tuple *direction;
 } t_ray;
 
+typedef struct s_material
+{
+    t_tuple *color;
+    float ambient;
+    float diffuse;
+    float specular;
+    float shininess;
+} t_material;
+
 typedef struct s_sphere
 {
     t_tuple *center;
     t_matrix *transform;
+    t_material *material;
     double r;
 } t_sphere;
 
@@ -131,6 +141,12 @@ typedef struct s_intersection
     t_object *object;
 } t_intersection;
 
+typedef struct s_light
+{
+    t_tuple *position;
+    t_tuple *intensity;
+} t_light;
+
 
 
 
@@ -150,4 +166,5 @@ double matrix_determinant(t_matrix *matrix);
 double matrix_minor(t_matrix *matrix, int row, int column);
 double matrix_cofactor(t_matrix *matrix, int row, int column);
 t_ray *transform(t_ray *ray, t_matrix *matrix);
+t_material *create_material(void);
 #endif

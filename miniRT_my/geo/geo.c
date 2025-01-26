@@ -6,7 +6,7 @@
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 17:17:09 by baouragh          #+#    #+#             */
-/*   Updated: 2025/01/25 12:28:59 by baouragh         ###   ########.fr       */
+/*   Updated: 2025/01/26 18:33:42 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -854,8 +854,13 @@ t_sphere *create_sphere(void)
     sphere->center = create_point(0, 0, 0);
     if (!sphere->center)
         return (free(sphere), NULL);
-    sphere->r = 1;
     sphere->transform = create_matrix(4, 4, (const double **)arr);
+    if (!sphere->transform)
+        return (free_matrix(sphere->center),NULL);
+    sphere->material = create_material();
+    if (!sphere->material)
+        return (free_matrix(sphere->transform), free_matrix(sphere->center) ,free(sphere), NULL);
+    sphere->r = 1;
     return (sphere);
 }
 
@@ -1080,6 +1085,51 @@ t_tuple *normal_at(t_object *object, t_tuple *world_point)
     return (res);
 }
 
+t_tuple *reflect(t_tuple *in, t_tuple *normal)
+{
+    t_tuple *mul;
+    t_tuple *mul1;
+    t_tuple *sub;
+
+    mul = mul_tuple(normal, 2);
+    mul1 = mul_tuple(mul, dot_tuple(in, normal));
+    sub = sub_tuple(in, mul1);
+    free(mul);
+    free(mul1);
+    return (sub);
+}
+
+t_light *point_light(t_tuple *position, t_tuple *intensity)
+{
+    t_light *light;
+
+    if (!position || !intensity)
+        return (NULL);
+    light = malloc(sizeof(t_light));
+    if (!light)
+        return (NULL);
+    light->position = position;
+    light->intensity = intensity;
+    return (light);
+}
+
+t_material *create_material(void)
+{
+    t_material *mat;
+
+    mat = malloc(sizeof(t_material));
+    if (!mat)
+        return (NULL);
+    mat->color = create_color(1, 1, 1);
+    if (!mat->color)
+        return (free(mat), NULL);
+    mat->ambient = 0.1;
+    mat->diffuse = 0.9;
+    mat->specular = 0.9;
+    mat->shininess = 200.0;
+    return (mat);
+}
+
 // TESTS
 void draw_sphere(t_canvas *can)
 {
@@ -1151,19 +1201,5 @@ void draw_sphere(t_canvas *can)
 
 int main()
 {
-    t_object *obj;
-    t_tuple *point;
-    t_matrix *trans;
-    t_matrix *scale;
-
-    obj = create_object(SPHERE);
-    if (!obj)
-        return (-1);
-    // trans = translation(0, 1, 0);
-    scale = matrix_multiply(scaling(1, 0.5, 1), rotation_z(PI /5), 4);
-    set_transform(obj, scale);
-    point = create_point(0, sqrt(2)/2, -sqrt(2)/2);
-    if (!point)
-        return (-1);
-    print_type(normal_at(obj, point));
+    
 }
