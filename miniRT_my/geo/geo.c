@@ -6,7 +6,7 @@
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 17:17:09 by baouragh          #+#    #+#             */
-/*   Updated: 2025/01/26 18:33:42 by baouragh         ###   ########.fr       */
+/*   Updated: 2025/01/29 13:17:53 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,34 +33,31 @@ void print_type(t_tuple *tuple)
 }
 
 // CREATE A TUPLE STRUCTURE---------------------------------------------------------------------
-t_tuple *create_tuple(double x, double y, double z, double w)
+t_tuple *create_tuple(double x, double y, double z, double w, t_list **garbge)
 {
     t_tuple *tuple;
-    tuple = malloc(sizeof(t_tuple));
-    if (tuple == NULL)
-        return (NULL);
 
+    tuple = safe_malloc(sizeof(t_tuple), garbge);
     tuple->x = x;
     tuple->y = y;
     tuple->z = z;
     tuple->w = w;
-
     return (tuple);
 }
 
-t_tuple *create_point(double x, double y, double z)
+t_tuple *create_point(double x, double y, double z, t_list **garbge)
 {
-    return (create_tuple(x, y, z, 1));
+    return (create_tuple(x, y, z, 1, garbge));
 }
 
-t_tuple *create_vector(double x, double y, double z)
+t_tuple *create_vector(double x, double y, double z, t_list **garbge)
 {
-    return (create_tuple(x, y, z, 0));
+    return (create_tuple(x, y, z, 0, garbge));
 }
 
-t_tuple *create_color(double x, double y, double z)
+t_tuple *create_color(double x, double y, double z, t_list **garbge)
 {
-    return (create_tuple(x, y, z, 20));
+    return (create_tuple(x, y, z, 20, garbge));
 }
 
 // ARTHEMATIC FUNCTIONS-------------------------------------------------------------------------
@@ -81,37 +78,37 @@ bool equal_tuple(t_tuple *a, t_tuple *b)
         return (false);
 }
 
-t_tuple *add_tuple(t_tuple *a, t_tuple *b)
+t_tuple *add_tuple(t_tuple *a, t_tuple *b, t_list **garbge)
 {
-    return (create_tuple(a->x + b->x, a->y + b->y, a->z + b->z, a->w + b->w));
+    return (create_tuple(a->x + b->x, a->y + b->y, a->z + b->z, a->w + b->w, garbge));
 }
 
-t_tuple *sub_tuple(t_tuple *a, t_tuple *b)
+t_tuple *sub_tuple(t_tuple *a, t_tuple *b, t_list **garbge)
 {
-    return (create_tuple(a->x - b->x, a->y - b->y, a->z - b->z, a->w - b->w));
+    return (create_tuple(a->x - b->x, a->y - b->y, a->z - b->z, a->w - b->w, garbge));
 }
 
-t_tuple *negate_tuple(t_tuple *a)
+t_tuple *negate_tuple(t_tuple *a, t_list **garbge)
 {
-    return (create_tuple(-a->x, -a->y, -a->z, -a->w));
+    return (create_tuple(-a->x, -a->y, -a->z, -a->w, garbge));
 }
 
-t_tuple *mul_tuple(t_tuple *a, double b)
+t_tuple *mul_tuple(t_tuple *a, double b, t_list **garbge)
 {
-    return (create_tuple(a->x * b, a->y * b, a->z * b, a->w * b));
+    return (create_tuple(a->x * b, a->y * b, a->z * b, a->w * b, garbge));
 }
 
-t_tuple *div_tuple(t_tuple *a, double b)
+t_tuple *div_tuple(t_tuple *a, double b, t_list **garbge)
 {
-    return (create_tuple(a->x / b, a->y / b, a->z / b, a->w / b));
+    return (create_tuple(a->x / b, a->y / b, a->z / b, a->w / b, garbge));
 }
 double len_tuple(t_tuple *a)
 {
     return (sqrt(a->x * a->x + a->y * a->y + a->z * a->z + a->w * a->w));
 }
-t_tuple *norm_tuple(t_tuple *a)
+t_tuple *norm_tuple(t_tuple *a, t_list **garbge)
 {
-    return (div_tuple(a, len_tuple(a)));
+    return (div_tuple(a, len_tuple(a), garbge));
 }
 
 double dot_tuple(t_tuple *a, t_tuple *b)
@@ -119,85 +116,115 @@ double dot_tuple(t_tuple *a, t_tuple *b)
     return (a->x * b->x + a->y * b->y + a->z * b->z + a->w * b->w);
 }
 
-t_tuple *cross_tuple(t_tuple *a, t_tuple *b)
+t_tuple *cross_tuple(t_tuple *a, t_tuple *b, t_list **garbge)
 {
     return (create_vector(a->y * b->z - a->z * b->y,
         a->z * b->x - a->x * b->z,
-        a->x * b->y - a->y * b->x));
+        a->x * b->y - a->y * b->x, garbge));
 }
 
-t_tuple *hadamard_product(t_tuple *a, t_tuple *b)
+t_tuple *hadamard_product(t_tuple *a, t_tuple *b, t_list **garbge)
 {
-    return (create_color(a->x * b->x, a->y * b->y, a->z * b->z));
+    return (create_color(a->x * b->x, a->y * b->y, a->z * b->z, garbge));
 }
 
 // PROJECTILE FUNCS--------------------------------------------------------------------------
 
-t_projectile *create_projectile(t_tuple *position, t_tuple *speed)
+t_projectile *create_projectile(t_tuple *position, t_tuple *speed, t_list **garbge)
 {
-    t_projectile *projectile = malloc(sizeof(t_projectile));
-    if (projectile == NULL)
-        return (NULL);
-
+    t_projectile *projectile;
+    
+    projectile = safe_malloc(sizeof(t_projectile), garbge);
     projectile->position = position;
     projectile->speed = speed;
-
     return (projectile);
 }
 
-t_environment *create_environment(t_tuple *gravity, t_tuple *wind)
+t_environment *create_environment(t_tuple *gravity, t_tuple *wind,  t_list **garbge)
 {
-    t_environment *environment = malloc(sizeof(t_environment));
-    if (environment == NULL)
-        return (NULL);
+    t_environment *environment;
 
+    environment = safe_malloc(sizeof(t_environment), garbge);
     environment->gravity = gravity;
     environment->wind = wind;
-
     return (environment);
 }
 
-t_projectile *tick(t_environment *env, t_projectile *projectile)
+t_projectile *tick(t_environment *env, t_projectile *projectile,  t_list **garbge)
 {
-    t_tuple *position = add_tuple(projectile->position, projectile->speed);
-    t_tuple *speed = add_tuple(add_tuple(projectile->speed, env->gravity), env->wind);
+    t_tuple *position;
+    t_tuple *speed;
 
-    return (create_projectile(position, speed));
+    position= add_tuple(projectile->position, projectile->speed, garbge);
+    speed = add_tuple(add_tuple(projectile->speed, env->gravity, garbge), env->wind, garbge);
+
+    return (create_projectile(position, speed, garbge));
 }
 
 // MLX MY--------------------------------------------------------------------------------------
 
-t_img *new_img( int width, int height, void *mlx)
+void add_to_garbge(t_list **garbge, void *adress)
+{
+    t_list *node;
+    
+    node = ft_lstnew(adress);
+    if (!node)
+    {
+        ft_lstclear(garbge, free);
+        exit(1);
+    }
+    ft_lstadd_back(garbge, node);
+}
+
+void *safe_malloc(size_t size, t_list **garbge)
+{
+    void *ptr;
+
+    ptr = malloc(size);
+    if (!ptr)
+    {
+        ft_lstclear(garbge, free);
+        exit(20);
+    }
+    add_to_garbge(garbge, ptr);
+    return (ptr);
+}
+
+
+t_img *new_img( int width, int height, void *mlx, t_list **garbge)
 {
     t_img *img;
+    t_list *node;
 
-    img = malloc(sizeof(t_img));
-    if (!img)
-        return (NULL);
+    img = safe_malloc(sizeof(t_img), garbge);
     img->img = mlx_new_image(mlx, width, height);
     if (!img->img)
-        return (NULL);
+        return (ft_lstclear(garbge, free), NULL);
+    node = ft_lstnew(img->img);
+    if (!node)
+        return (ft_lstclear(garbge, free), NULL);
+    ft_lstadd_back(garbge, node);
     img->addr = mlx_get_data_addr(img->img, &img->bits_per_pixel, &img->line_length, &img->endian);
     if (!img->addr)
-        return (NULL);
+        return (ft_lstclear(garbge, free), NULL);
+    node = ft_lstnew(img->addr);
+    if (!node)
+        return (ft_lstclear(garbge, free), NULL);
+    ft_lstadd_back(garbge, node);
     return (img);
 }
 
-t_canvas * create_canvas(int width , int height, void *mlx_ptr)
+t_canvas * create_canvas(int width , int height, void *mlx_ptr, t_list **garbge)
 {
     t_canvas *canvas;
 
     if (!mlx_ptr)
         return (NULL);
-    canvas = malloc(sizeof(t_canvas));
-    if (!canvas)
-        return (NULL);
+    canvas = safe_malloc(sizeof(t_canvas), garbge);
     canvas->mlx = mlx_ptr;
     canvas->width = width;
     canvas->height = height;
-    canvas->img = new_img(width, height, mlx_ptr);
-    if (!canvas->img)
-        return (NULL);
+    canvas->img = new_img(width, height, mlx_ptr, garbge);
     return (canvas);
 }
 
@@ -253,7 +280,7 @@ int color_to_int(t_tuple *color)
     return ((r << 16) | (g << 8) | (b));
 }
 
-t_tuple * int_to_color(int color)
+t_tuple * int_to_color(int color, t_list **garbge)
 {
     double r;
     double g;
@@ -263,7 +290,7 @@ t_tuple * int_to_color(int color)
     g = ((color >> 8) & 0XFF) / 255.0;
     b = (color & 0XFF) / 255.0;
 
-    return (create_color(r, g, b));
+    return (create_color(r, g, b, garbge));
 }
 
 void write_pixel(t_canvas *canvas, int x, int y, t_tuple *color)
@@ -271,17 +298,17 @@ void write_pixel(t_canvas *canvas, int x, int y, t_tuple *color)
     my_mlx_pixel_put(canvas->img, x, y, color_to_int(color));
 }
 
-t_tuple *pixel_at(t_canvas *canvas, int x, int y)
+t_tuple *pixel_at(t_canvas *canvas, int x, int y, t_list **garbge)
 { 
     int color;
 
     color = color_at(canvas->img, x, y);
-    return (int_to_color(color));
+    return (int_to_color(color, garbge));
 }
 
 // MATRIXS INTO THE SCENE------------------------------------------------------------
 
-void free_old(double **res, int i)
+void free_arr(double **res, int i)
 {
     if (!res)
         return ;
@@ -293,21 +320,15 @@ void free_old(double **res, int i)
     free(res);
 }
 
-double **create_arr(int rows, int cols)
+double **create_arr(int rows, int cols, t_list **garbge)
 {
     double **res;
     int i;
 
-    res = malloc(sizeof(double *) * rows);
-    if (!res)
-        return (NULL);
+    res = safe_malloc(sizeof(double *) * rows, garbge);
     i = -1;
     while (++i < cols)
-    {
-        res[i] = malloc(sizeof(double) * cols);
-        if (!res[i])
-            return( free_old(res, i), NULL);
-    }
+        res[i] = safe_malloc(sizeof(double) * cols, garbge);
     return (res);
 }
 
@@ -327,8 +348,7 @@ void free_matrix(t_matrix *matrix)
     free(matrix);
 }
 
-
-double **set_zeros(int rows, int colums)
+double **set_zeros(int rows, int colums, t_list **garbge)
 {
     int i;
     int j;
@@ -336,15 +356,11 @@ double **set_zeros(int rows, int colums)
 
     if (rows <= 0 || colums <= 0)
         return (NULL);
-    res = malloc(rows * sizeof(double *));
-    if (!res)
-        return (NULL);
+    res = safe_malloc(rows * sizeof(double *), garbge);
     i = 0;
     while (i < rows)
     {
-        res[i] = malloc(colums * sizeof(double));
-        if (!res[i])
-            return (free_old(res, i - 1) ,NULL);
+        res[i] = safe_malloc(colums * sizeof(double), garbge);
         j = 0;
         while(j < colums)
         {
@@ -356,7 +372,7 @@ double **set_zeros(int rows, int colums)
     return (res);
 }
 
-double **duplicate_array(int rows, int colums, const double **arr)
+double **duplicate_array(int rows, int colums, const double **arr, t_list **garbge)
 {
     int i;
     int j;
@@ -364,15 +380,11 @@ double **duplicate_array(int rows, int colums, const double **arr)
 
     if (!arr || !*arr || rows <= 0 || colums <= 0)
         return (NULL);
-    res = malloc(rows * sizeof(double *));
-    if (!res)
-        return (NULL);
+    res = safe_malloc(rows * sizeof(double *), garbge);
     i = 0;
     while (i < rows)
     {
-        res[i] = malloc(colums * sizeof(double));
-        if (!res[i])
-            return (free_old(res, i - 1) ,NULL);
+        res[i] = safe_malloc(colums * sizeof(double), garbge);
         j = 0;
         while(j < colums)
         {
@@ -384,26 +396,20 @@ double **duplicate_array(int rows, int colums, const double **arr)
     return (res);
 }
 
-t_matrix *create_matrix(int rows, int colums, const double **arr)
+t_matrix *create_matrix(int rows, int colums, const double **arr, t_list **garbge)
 {
     t_matrix *matrix;
 
     if (rows <= 0 || colums <= 0 || rows != colums)
         return (NULL);
-    matrix = malloc(sizeof(t_matrix));
-    if (!matrix)
-        return (NULL);
+    matrix = safe_malloc(sizeof(t_matrix), garbge);
     matrix->size = rows;
     if (!arr || !*arr)
     {
-        matrix->data = set_zeros(rows, colums);
-        if (!matrix->data)
-            return (free(matrix), NULL);
+        matrix->data = set_zeros(rows, colums, garbge);
         return (matrix);
     }
-    matrix->data = duplicate_array(rows, colums, arr);
-    if (!matrix->data)
-        return (free(matrix), NULL);
+    matrix->data = duplicate_array(rows, colums, arr, garbge);
     return (matrix);
 }
 
@@ -464,7 +470,7 @@ bool matrix_equal(t_matrix *m1, t_matrix *m2)
     return (1);   
 }
 
-t_matrix *matrix_multiply(t_matrix *a, t_matrix *b, int size) // JUST FOR 4X4 matrixs 
+t_matrix *matrix_multiply(t_matrix *a, t_matrix *b, int size, t_list **garbge) // JUST FOR 4X4 matrixs 
 {
     t_matrix *matrix;
     int i;
@@ -472,9 +478,7 @@ t_matrix *matrix_multiply(t_matrix *a, t_matrix *b, int size) // JUST FOR 4X4 ma
 
     if (!a || !b || !a->data || !b->data || a->size != size || b->size != size)
         return (0);
-    matrix = create_matrix(size, size, NULL);
-    if (!matrix)
-        return (NULL);
+    matrix = create_matrix(size, size, NULL, garbge);
     i = 0;
     while (i < size)
     {
@@ -492,7 +496,7 @@ t_matrix *matrix_multiply(t_matrix *a, t_matrix *b, int size) // JUST FOR 4X4 ma
     return (matrix);
 }
 
-t_tuple *matrix_tuple_mul4x4(t_matrix *a, t_tuple *t) // JUST FOR 4X4 matrixs 
+t_tuple *matrix_tuple_mul4x4(t_matrix *a, t_tuple *t, t_list **garbge) // JUST FOR 4X4 matrixs 
 {
     t_tuple *tuple;
     int i;
@@ -500,7 +504,7 @@ t_tuple *matrix_tuple_mul4x4(t_matrix *a, t_tuple *t) // JUST FOR 4X4 matrixs
 
     if (!a || !t || !a->data || a->size != 4)
         return (0);
-    tuple = create_tuple(0, 0, 0, 0);
+    tuple = create_tuple(0, 0, 0, 0, garbge);
     i = 0;
     while (i < 4)
     {
@@ -521,7 +525,7 @@ t_tuple *matrix_tuple_mul4x4(t_matrix *a, t_tuple *t) // JUST FOR 4X4 matrixs
     return (tuple);
 }
 
-t_matrix *matrix_transpose4x4(t_matrix *matrix)
+t_matrix *matrix_transpose4x4(t_matrix *matrix, t_list **garbge)
 {
     t_matrix *trans;
     int i;
@@ -529,9 +533,7 @@ t_matrix *matrix_transpose4x4(t_matrix *matrix)
 
     if (!matrix || !matrix->data)
         return (NULL);
-    trans = create_matrix(4, 4 , NULL);
-    if (!trans)
-        return (NULL);
+    trans = create_matrix(4, 4 , NULL, garbge);
     i = 0;
     while (i < 4)
     {
@@ -575,30 +577,28 @@ void remove_row_cols(t_matrix *matrix, t_matrix *submatrix, int row, int column)
     }
 }
 
-t_matrix *sub_matrix(t_matrix *matrix, int row, int column)
+t_matrix *sub_matrix(t_matrix *matrix, int row, int column, t_list **garbge)
 {
     t_matrix *submatrix;
 
     if (!matrix || !matrix->data || matrix->size <= column || matrix->size <= row)
         return (NULL);
-    submatrix = create_matrix(matrix->size - 1, matrix->size - 1, NULL);
-    if (!submatrix)
-        return (NULL);
+    submatrix = create_matrix(matrix->size - 1, matrix->size - 1, NULL, garbge);
     remove_row_cols(matrix ,submatrix, row, column);
     return (submatrix);
 }
 
-double matrix_cofactor(t_matrix *matrix, int row, int column)
+double matrix_cofactor(t_matrix *matrix, int row, int column, t_list **garbge)
 {
     double cofactor;
 
-    cofactor = matrix_minor(matrix, row, column);
+    cofactor = matrix_minor(matrix, row, column, garbge);
     if ((row + column) % 2)
         return (-cofactor);
     return (cofactor);
 }
 
-double matrix_determinant(t_matrix *matrix)
+double matrix_determinant(t_matrix *matrix, t_list **garbge)
 {
     double determinant;
     int    j;
@@ -612,35 +612,32 @@ double matrix_determinant(t_matrix *matrix)
     else
     {
         while (++j < matrix->size)
-            determinant += matrix_cofactor(matrix, 0, j) * matrix->data[0][j];
+            determinant += matrix_cofactor(matrix, 0, j, garbge) * matrix->data[0][j];
     }
     return (determinant);
 }
 
-double matrix_minor(t_matrix *matrix, int row, int column)
+double matrix_minor(t_matrix *matrix, int row, int column, t_list **garbge)
 {
     t_matrix *sub;
     double  minor;
 
     if (!matrix || !matrix->data)
         return (0);
-    sub = sub_matrix(matrix, row, column);
-    if (!sub)
-        return (0);
-    minor = matrix_determinant(sub);
-    free_matrix(sub);
+    sub = sub_matrix(matrix, row, column, garbge);
+    minor = matrix_determinant(sub, garbge);
     return (minor);
 }
 
-bool matrix_invertiblity(t_matrix *matrix)
+bool matrix_invertiblity(t_matrix *matrix, t_list **garbge)
 {
     double determinant;
 
-    determinant = matrix_determinant(matrix);
+    determinant = matrix_determinant(matrix, garbge);
     return ((fabs(determinant) > EPSILON));
 }
 
-t_matrix *matrix_inverse(t_matrix *matrix)
+t_matrix *matrix_inverse(t_matrix *matrix, t_list **garbge)
 {
     t_matrix *inverse;
     double cofactor;
@@ -648,30 +645,28 @@ t_matrix *matrix_inverse(t_matrix *matrix)
     int row;
     int col;
 
-    if (!matrix || !matrix->data || !matrix_invertiblity(matrix))
+    if (!matrix || !matrix->data || !matrix_invertiblity(matrix, garbge))
         return (NULL);
-    inverse = create_matrix(matrix->size, matrix->size, NULL);
-    if (!inverse)
-        return (NULL);
-    determinant = matrix_determinant(matrix);
+    inverse = create_matrix(matrix->size, matrix->size, NULL, garbge);
+    determinant = matrix_determinant(matrix, garbge);
     row = -1;
     while (++row < matrix->size)
     {
         col = -1;
         while (++col < matrix->size)
         {
-            cofactor = matrix_cofactor(matrix, row, col);
+            cofactor = matrix_cofactor(matrix, row, col, garbge);
             inverse->data[col][row] = cofactor / determinant;
         }
     }
     return (inverse);
 }
 
-t_matrix* translation(double x, double y, double z)
+t_matrix* translation(double x, double y, double z, t_list **garbge)
 {
     t_matrix *matrix;
 
-    matrix = create_matrix(4, 4, NULL);
+    matrix = create_matrix(4, 4, NULL, garbge);
     if (!matrix)
         return (NULL);
     matrix->data[0][0] = 1;
@@ -684,11 +679,11 @@ t_matrix* translation(double x, double y, double z)
     return (matrix);
 }
 
-t_matrix *scaling(double x, double y, double z)
+t_matrix *scaling(double x, double y, double z, t_list **garbge)
 {
     t_matrix *matrix;
 
-    matrix = create_matrix(4, 4, NULL);
+    matrix = create_matrix(4, 4, NULL, garbge);
     if (!matrix)
         return (NULL);
     matrix->data[0][0] = x;
@@ -708,13 +703,11 @@ double rad_to_deg(double rad)
     return ((rad / PI) * 180);
 }
 
-t_matrix *rotation_x(double rad)
+t_matrix *rotation_x(double rad, t_list **garbge)
 {
     t_matrix *matrix;
 
-    matrix = create_matrix(4, 4, NULL);
-    if (!matrix)
-        return (NULL);
+    matrix = create_matrix(4, 4, NULL, garbge);
 
     matrix->data[0][0] = 1;
     matrix->data[3][3] = 1;
@@ -726,14 +719,11 @@ t_matrix *rotation_x(double rad)
     return (matrix);
 }
 
-t_matrix *rotation_y(double rad)
+t_matrix *rotation_y(double rad, t_list **garbge)
 {
     t_matrix *matrix;
 
-    matrix = create_matrix(4, 4, NULL);
-    if (!matrix)
-        return (NULL);
-
+    matrix = create_matrix(4, 4, NULL, garbge);
     matrix->data[3][3] = 1;
     matrix->data[2][1] = 1;
     
@@ -744,13 +734,11 @@ t_matrix *rotation_y(double rad)
     return (matrix);
 }
 
-t_matrix *rotation_z(double rad)
+t_matrix *rotation_z(double rad, t_list **garbge)
 {
     t_matrix *matrix;
 
-    matrix = create_matrix(4, 4, NULL);
-    if (!matrix)
-        return (NULL);
+    matrix = create_matrix(4, 4, NULL, garbge);
 
     matrix->data[3][3] = 1;
     matrix->data[2][2] = 1;
@@ -762,26 +750,23 @@ t_matrix *rotation_z(double rad)
     return (matrix);
 }
 
-t_shearing *create_shearing(void)
+t_shearing *create_shearing(t_list **garbge)
 {
     t_shearing *shearing;
 
-    shearing = malloc(sizeof(t_shearing));
-    if (!shearing)
-        return (NULL);
+    shearing = safe_malloc(sizeof(t_shearing), garbge);
    ft_memset(shearing, 0, sizeof(t_shearing));
     return (shearing);
 }
 
-t_matrix *shearing(t_shearing *nums)
+t_matrix *shearing(t_shearing *nums, t_list **garbge)
 {
     t_matrix *matrix;
 
     if (!nums)
         return (NULL);
-    matrix = create_matrix(4, 4, NULL);
-    if (!matrix)
-        return (NULL);
+    matrix = create_matrix(4, 4, NULL, garbge);
+
     matrix->data[0][0] = 1;
     matrix->data[1][1] = 1;
     matrix->data[2][2] = 1;
@@ -796,32 +781,27 @@ t_matrix *shearing(t_shearing *nums)
     return (matrix);
 }
 
-t_ray * create_ray(t_tuple *origin, t_tuple *direction)
+t_ray * create_ray(t_tuple *origin, t_tuple *direction, t_list **garbge)
 {
     t_ray *ray;
     
     if (!origin || !direction)
         return (NULL);
-    ray = malloc(sizeof (t_ray));
-    if(!ray)
-        return (NULL);
+    ray = safe_malloc(sizeof (t_ray), garbge);
     ray->origin = origin;
     ray->direction = direction;
     return (ray);
 }
 
-t_tuple * ray_position(t_ray *ray, double t)
+t_tuple * ray_position(t_ray *ray, double t, t_list **garbge)
 {
     t_tuple *pose;
     t_tuple *a_move;
 
     if (!ray || !ray->direction || !ray->origin)
         return (NULL);
-    a_move = mul_tuple(ray->direction, t);
-    if (!a_move)
-        return (NULL);
-    pose = add_tuple(ray->origin, a_move);
-    free(a_move);
+    a_move = mul_tuple(ray->direction, t, garbge);
+    pose = add_tuple(ray->origin, a_move, garbge);
     return (pose);
 }
 
@@ -836,41 +816,29 @@ void free_ray(t_ray *ray)
     free(ray);
 }
 
-t_sphere *create_sphere(void)
+t_sphere *create_sphere(t_list **garbge)
 {
     t_sphere *sphere;
     double **arr;
 
-    arr = create_arr(4, 4);
-    if (!arr)
-        return (NULL);
+    arr = create_arr(4, 4, garbge);
     arr[0][0] = 1;
     arr[1][1] = 1;
     arr[2][2] = 1;
     arr[3][3] = 1;
-    sphere = malloc(sizeof(t_sphere));
-    if (!sphere)
-        return (NULL);
-    sphere->center = create_point(0, 0, 0);
-    if (!sphere->center)
-        return (free(sphere), NULL);
-    sphere->transform = create_matrix(4, 4, (const double **)arr);
-    if (!sphere->transform)
-        return (free_matrix(sphere->center),NULL);
-    sphere->material = create_material();
-    if (!sphere->material)
-        return (free_matrix(sphere->transform), free_matrix(sphere->center) ,free(sphere), NULL);
+    sphere = safe_malloc(sizeof(t_sphere), garbge);
+    sphere->center = create_point(0, 0, 0, garbge);
+    sphere->transform = create_matrix(4, 4, (const double **)arr, garbge);
+    sphere->material = create_material(garbge);
     sphere->r = 1;
     return (sphere);
 }
 
-t_intersect *create_intersect(void)
+t_intersect *create_intersect(t_list **garbge)
 {
     t_intersect *intr;
     
-    intr = malloc (sizeof(t_intersect));
-    if (!intr)
-        return (NULL);
+    intr = safe_malloc(sizeof(t_intersect), garbge);
     intr->count = 0;
     intr->object = NULL;
     intr->t1 = -1;
@@ -878,7 +846,7 @@ t_intersect *create_intersect(void)
     return (intr);
 }
 
-t_intersect *intersect(t_object *object, t_ray *ray)
+t_intersect *intersect(t_object *object, t_ray *ray, t_list **garbge)
 {
     t_intersect *intr;        
     t_tuple *sphere_to_ray;
@@ -890,16 +858,13 @@ t_intersect *intersect(t_object *object, t_ray *ray)
     
     if (!object || !object->shape || !ray)
         return (NULL);
-    ray2 = transform(ray, matrix_inverse(object->shape->sphere->transform));
-    intr = create_intersect();
-    if (!intr)
-        return (NULL);
-    sphere_to_ray = sub_tuple(ray2->origin, object->shape->sphere->center);
+    ray2 = transform(ray, matrix_inverse(object->shape->sphere->transform, garbge), garbge);
+    intr = create_intersect(garbge);
+    sphere_to_ray = sub_tuple(ray2->origin, object->shape->sphere->center, garbge);
     a = dot_tuple(ray2->direction, ray2->direction);
     b = 2 * dot_tuple(ray2->direction, sphere_to_ray);
     c = dot_tuple(sphere_to_ray, sphere_to_ray) - 1;
     discriminant = b * b - 4 * a * c;
-    free(sphere_to_ray);
     if (discriminant < 0)
         return (intr);
     intr->object = object;
@@ -909,7 +874,7 @@ t_intersect *intersect(t_object *object, t_ray *ray)
     return (intr);
 }
 
-void intersection(double t, t_object *object, e_type type, t_list **list)
+void intersection(double t, t_object *object, e_type type, t_list **list, t_list **garbge)
 {
     t_list *node;
     t_intersection *res;
@@ -917,48 +882,52 @@ void intersection(double t, t_object *object, e_type type, t_list **list)
     if (!object || !list || !object->shape)
         return ;
     
-    res = malloc(sizeof(t_intersection));
-    if (!res)
-        return ;
+    res = safe_malloc(sizeof(t_intersection), garbge);
     res->t = t;
-    res->object = malloc(sizeof(t_object));
-    if (!res->object)
-        return (free(res),(void)0);
+    res->object = safe_malloc(sizeof(t_object), garbge);
     res->object = object;
     res->object->type = type;
     node = ft_lstnew(res);
-    if (!node)
-        return(free(res->object), free(res), (void)0);
+    add_to_garbge(garbge, node);
     ft_lstadd_back(list, node);
 }
-t_shape *create_shape(e_type type)
+t_shape *create_shape(e_type type, t_list **garbge)
 {
     t_shape *shape;
 
-    shape = malloc(sizeof(t_shape));
-    if (!shape)
-        return (NULL);
+    shape = safe_malloc(sizeof(t_shape), garbge);
     if (type == SPHERE)
-    {
-        shape->sphere = create_sphere();
-        if (!shape)
-            return (NULL);
-    }
+        shape->sphere = create_sphere(garbge);
     return (shape);
 }
 
-t_object *create_object(e_type type)
+t_object *create_object(e_type type, t_list **garbge)
 {
     t_object *object;
     
     object = NULL;
-    object = malloc(sizeof(t_object));
-    if (!object)
-        return (NULL);
-    object->shape = create_shape(type);
-    if (!object->shape)
-        return (free(object), NULL);
+    object = safe_malloc(sizeof(t_object), garbge);
+    object->shape = create_shape(type, garbge);
+    object->material_seted = 0;
     return (object);
+}
+
+void free_object(t_object *object)
+{
+    if (!object)
+        return ;
+    if (!object->shape)
+        return (free(object));
+    if (object->type == SPHERE)
+    {
+        if (!object->shape->sphere)
+            return (free(object->shape), free(object));
+        if (object->material_seted == 1)
+            free_material(object->shape->sphere->material);
+        if (object->shape->sphere->center)
+            free(object->shape->sphere->center);
+        return (free(object->shape->sphere), free(object->shape), free(object));
+    }
 }
 
 void print_intersections(t_list *list)
@@ -1033,7 +1002,7 @@ double hit2(t_list *intr_list) // return a positive num if there is intersction 
     return (res);
 }
 
-t_ray *transform(t_ray *ray, t_matrix *matrix)
+t_ray *transform(t_ray *ray, t_matrix *matrix, t_list **garbge)
 {
     t_ray *res;
     t_tuple *orgin;
@@ -1041,9 +1010,9 @@ t_ray *transform(t_ray *ray, t_matrix *matrix)
 
     if (!ray || !matrix)
         return (NULL);
-    res = create_ray(orgin, dir);
-    res->direction =  matrix_tuple_mul4x4(matrix, ray->direction);
-    res->origin = matrix_tuple_mul4x4(matrix, ray->origin);
+    res = create_ray(orgin, dir, garbge);
+    res->direction =  matrix_tuple_mul4x4(matrix, ray->direction, garbge);
+    res->origin = matrix_tuple_mul4x4(matrix, ray->origin, garbge);
     return (res);
 }
 
@@ -1056,7 +1025,7 @@ int  set_transform(t_object *object, t_matrix *matrix)
     return (0);
 }
 
-t_tuple *normal_at(t_object *object, t_tuple *world_point)
+t_tuple *normal_at(t_object *object, t_tuple *world_point, t_list **garbge)
 {
     t_matrix *inverse;
     t_matrix *transpose;
@@ -1066,63 +1035,47 @@ t_tuple *normal_at(t_object *object, t_tuple *world_point)
     t_tuple *world_normal;
     t_tuple *res;
 
-    center = create_point(0, 0, 0);
-    if (!center)
-        return (NULL);
-    inverse = matrix_inverse(object->shape->sphere->transform);
-    object_point = matrix_tuple_mul4x4(inverse, world_point);
-    object_normal = sub_tuple(object_point, center);
-    transpose = matrix_transpose4x4(inverse);
-    world_normal = matrix_tuple_mul4x4(transpose, object_normal);
+    center = create_point(0, 0, 0, garbge);
+    inverse = matrix_inverse(object->shape->sphere->transform, garbge);
+    object_point = matrix_tuple_mul4x4(inverse, world_point, garbge);
+    object_normal = sub_tuple(object_point, center, garbge);
+    transpose = matrix_transpose4x4(inverse, garbge);
+    world_normal = matrix_tuple_mul4x4(transpose, object_normal, garbge);
     world_normal->w = 0;
-    res = norm_tuple(world_normal);
-    free(center);
-    free(object_point);
-    free(object_normal);
-    free(world_normal);
-    free_matrix(inverse);
-    free_matrix(transpose);
+    res = norm_tuple(world_normal, garbge);
     return (res);
 }
 
-t_tuple *reflect(t_tuple *in, t_tuple *normal)
+t_tuple *reflect(t_tuple *in, t_tuple *normal, t_list **garbge)
 {
     t_tuple *mul;
     t_tuple *mul1;
     t_tuple *sub;
 
-    mul = mul_tuple(normal, 2);
-    mul1 = mul_tuple(mul, dot_tuple(in, normal));
-    sub = sub_tuple(in, mul1);
-    free(mul);
-    free(mul1);
+    mul = mul_tuple(normal, 2, garbge);
+    mul1 = mul_tuple(mul, dot_tuple(in, normal), garbge);
+    sub = sub_tuple(in, mul1, garbge);
     return (sub);
 }
 
-t_light *point_light(t_tuple *position, t_tuple *intensity)
+t_light *point_light(t_tuple *position, t_tuple *intensity, t_list **garbge)
 {
     t_light *light;
 
     if (!position || !intensity)
         return (NULL);
-    light = malloc(sizeof(t_light));
-    if (!light)
-        return (NULL);
+    light = safe_malloc(sizeof(t_light), garbge);
     light->position = position;
     light->intensity = intensity;
     return (light);
 }
 
-t_material *create_material(void)
+t_material *create_material(t_list **garbge)
 {
     t_material *mat;
 
-    mat = malloc(sizeof(t_material));
-    if (!mat)
-        return (NULL);
-    mat->color = create_color(1, 1, 1);
-    if (!mat->color)
-        return (free(mat), NULL);
+    mat = safe_malloc(sizeof(t_material), garbge);
+    mat->color = create_color(1, 1, 1, garbge);
     mat->ambient = 0.1;
     mat->diffuse = 0.9;
     mat->specular = 0.9;
@@ -1130,8 +1083,29 @@ t_material *create_material(void)
     return (mat);
 }
 
+void free_material(t_material *m)
+{
+    if (!m)
+        return ;
+    if (!m->color)
+        return (free(m));
+    return (free(m->color), free(m));
+}
+
+int set_material(t_object *object, t_material *material)
+{
+    if (!object  || !object->shape || !material)
+        return (-1);
+    if (object->type == SPHERE)
+    {
+        object->shape->sphere->material = material;
+        object->material_seted = 1;
+    }
+    return (0);
+}
+
 // TESTS
-void draw_sphere(t_canvas *can)
+void draw_sphere(t_canvas *can, t_list **garbge)
 {
     t_tuple *orgin;
     t_tuple *dir;
@@ -1141,30 +1115,32 @@ void draw_sphere(t_canvas *can)
     t_intersect *xs;
     t_list *list;
     t_shearing *shr;
+
     double wall_z;
     double wall_size;
     double pixel_size;
     double half;
-    shr = create_shearing();
+    shr = create_shearing(garbge);
     shr->xy = 1;
 
     if (!can || !can->mlx || !can->img || !can->img->img)
         return ;
-    orgin = create_point(0, 0, -5);
-    color = create_color(1, 0, 0);
-    object = create_object(SPHERE);
+    orgin = create_point(0, 0, -5, garbge);
+    color = create_color(1, 0, 0, garbge);
+    object = create_object(SPHERE, garbge);
     wall_z = 10;
     wall_size = 7;
     pixel_size = wall_size / can->height;
     half = wall_size / 2;
 
-    object->shape->sphere->transform = matrix_multiply(shearing(shr), scaling(0.5, 1, 1), 4);
+    object->shape->sphere->transform = matrix_multiply(shearing(shr, garbge), scaling(0.5, 1, 1, garbge), 4, garbge);
     int y;
     int x;
     y = -1;
     double world_x;
     double world_y;
     t_tuple *pose;
+    int var;
     while (++y < can->height - 1)
     {
         world_y = half - pixel_size * y;
@@ -1172,13 +1148,17 @@ void draw_sphere(t_canvas *can)
         while (++x < can->height - 1)
         {
             world_x = -half + pixel_size * x;
-            pose = create_point(world_x, world_y, wall_z);
-            ray = create_ray(orgin, norm_tuple(sub_tuple(pose, orgin)));
-            xs = intersect(object, ray);
+            pose = create_point(world_x, world_y, wall_z, garbge);
+            ray = create_ray(orgin, norm_tuple(sub_tuple(pose, orgin, garbge), garbge), garbge);
+            xs = intersect(object, ray, garbge);
             list = ft_lstnew(xs);
+            add_to_garbge(garbge, list);
             if (hit2(list) != -1)
                 write_pixel(can, x, y, color);
         }
+            var = (y * 100) / (can->height - 1);
+            if (var)
+            printf("[%d/100]\n",var);
     }
 }
 // MAIN -----------------------------------------------------------------------
@@ -1186,6 +1166,7 @@ void draw_sphere(t_canvas *can)
     // int canavas_pixel;
     // void *mlx;
     // void *win;
+    // t_list **garbge;
 
     // mlx = mlx_init();
     // if (!mlx)
@@ -1195,11 +1176,50 @@ void draw_sphere(t_canvas *can)
     // if (!win)
     //     return (-1);
     // can = create_canvas(canavas_pixel, canavas_pixel, mlx);
-    // draw_sphere(can);
+    // draw_sphere(can, garbge);
     // mlx_put_image_to_window(mlx, win, can->img->img, 0, 0);
     // mlx_loop(mlx);
 
 int main()
 {
+    t_object *object;
+    t_material *m;
+    t_list *garbge;
+    t_list *tmp;
+
+    garbge = NULL;
+    object = create_object(SPHERE, &garbge);
+    m = create_material(&garbge);
+    m->ambient = 1;
+    printf("%f\n",object->shape->sphere->material->ambient);
+    set_material(object, m);
+    printf("%f\n",object->shape->sphere->material->ambient);
+    tmp = garbge;
+    ft_lstclear(&garbge, free);
     
+    t_canvas *can;
+    int canavas_pixel;
+    void *mlx;
+    void *win;
+    t_list *garbge;
+
+    garbge = NULL;
+    mlx = mlx_init();
+    if (!mlx)
+        return (-1);
+    add_to_garbge(&garbge, mlx);
+    canavas_pixel = 20;
+    win = mlx_new_window(mlx, canavas_pixel, canavas_pixel, "WIN");
+    if (!win)
+        return (-1);
+    add_to_garbge(&garbge, win);
+    can = create_canvas(canavas_pixel, canavas_pixel, mlx, &garbge);
+    printf("1\n");
+    draw_sphere(can, &garbge);
+    printf("2\n");
+    mlx_put_image_to_window(mlx, win, can->img->img, 0, 0);
+    printf("3\n");
+    printf("DONE\n");
+    mlx_loop(mlx);
+    ft_lstclear(&garbge, free);
 }

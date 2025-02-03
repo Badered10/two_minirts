@@ -1,5 +1,5 @@
-#ifndef GEO_H
-#define GEO_H
+#ifndef H_H
+#define H_H
 
 #include "../mlx_linux/mlx.h"
 #include <math.h>
@@ -7,8 +7,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
-
 
 
 #ifdef EPSILON
@@ -31,8 +29,8 @@
 
 #define VEC 0
 
-#define EPSILON 0.00000000000000000000000000000000001
-#define PI 3.14159265358979323846264338327950
+#define EPSILON 0.00001
+#define PI 3.14159265359
 
 
 typedef enum s_type
@@ -96,17 +94,17 @@ typedef struct s_shearing
 
 typedef struct s_ray
 {
-    t_tuple *origin; // point
-    t_tuple *direction; // vector
+    t_tuple *origin;
+    t_tuple *direction;
 } t_ray;
 
 typedef struct s_material
 {
     t_tuple *color;
-    float ambient;
-    float diffuse;
-    float specular;
-    float shininess;
+    double ambient;
+    double diffuse;
+    double specular;
+    double shininess;
 } t_material;
 
 typedef struct s_sphere
@@ -127,51 +125,62 @@ typedef struct s_object
 {
     t_shape *shape;
     e_type type;
-    bool material_seted;
 } t_object;
 
 typedef struct s_intersect
 {
     t_object *object;
-    int     count;
-    int     t1;
-    int     t2;
+    double     t;
 } t_intersect;
 
-typedef struct s_intersection
+typedef struct s_xs
 {
-    double t;
-    t_object *object;
-} t_intersection;
+    t_intersect *inters;
+    int count; // total of inters;
+} t_xs;
+
 
 typedef struct s_light
 {
-    t_tuple *position; // point
-    t_tuple *intensity; // color RGB A
+    t_tuple *position;
+    t_tuple *intensity;
 } t_light;
 
+typedef struct s_world
+{
+    t_list *lights_list;
+    t_list *objects_list;
+} t_world;
+
+typedef struct s_comps
+{
+    double t;
+    t_object *object;
+    t_tuple *point;
+    t_tuple *eyev;
+    t_tuple *normalv;
+    bool inside;
+} t_comps;
 
 
 
-t_tuple *create_tuple(double x, double y, double z, double w, t_list **garbge);
-t_tuple *create_vector(double x, double y, double z, t_list **garbge);
-t_tuple *create_point(double x, double y, double z, t_list **garbge);
+
+
+t_tuple *create_tuple(double x, double y, double z, double w);
+t_tuple *create_vector(double x, double y, double z);
+t_tuple *create_point(double x, double y, double z);
 bool    equal(double a, double b);
 bool    equal_tuple(t_tuple *a, t_tuple *b);
-t_tuple *add_tuple(t_tuple *a, t_tuple *b, t_list **garbge);
-t_tuple *sub_tuple(t_tuple *a, t_tuple *b, t_list **garbge);
-t_tuple *negate_tuple(t_tuple *a, t_list **garbge);
-t_tuple *mul_tuple(t_tuple *a, double b, t_list **garbge);
+t_tuple *add_tuple(t_tuple *a, t_tuple *b);
+t_tuple *sub_tuple(t_tuple *a, t_tuple *b);
+t_tuple *negate_tuple(t_tuple *a);
+t_tuple *mul_tuple(t_tuple *a, double b);
 double  len_tuple(t_tuple *a);
-t_tuple *norm_tuple(t_tuple *a, t_list **garbge);
+t_tuple *norm_tuple(t_tuple *a);
 double  dot_tuple(t_tuple *a, t_tuple *b);
-double matrix_determinant(t_matrix *matrix, t_list **garbge);
-double matrix_minor(t_matrix *matrix, int row, int column, t_list **garbge);
-double matrix_cofactor(t_matrix *matrix, int row, int column, t_list **garbge);
-t_ray *transform(t_ray *ray, t_matrix *matrix, t_list **garbge);
-t_material *create_material(t_list **garbge);
-void free_material(t_material *m);
-void add_to_garbge(t_list **garbge, void *adress);
-void *safe_malloc(size_t size, t_list **garbge);
-
+double matrix_determinant(t_matrix *matrix);
+double matrix_minor(t_matrix *matrix, int row, int column);
+double matrix_cofactor(t_matrix *matrix, int row, int column);
+t_ray *transform(t_ray *ray, t_matrix *matrix);
+t_material *create_material(void);
 #endif

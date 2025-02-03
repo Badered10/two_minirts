@@ -5,15 +5,14 @@ CFLAGS			:= #-Wall -Wextra -Werror
 # 1 FOR MAC
 # MFLAGS			:= -Lmlx_mac -lmlx -framework OpenGL -framework AppKit #-lX11 -lXext
 # 2 FOR LINUX  
-MFLAGS = -lm -g3  -Lmlx_linux -lmlx_Linux -L/usr/lib -Imlx_linux -lXext -lX11 -lm -lz
-#-fsanitize=address
+MFLAGS = -lm -g3  -Lmlx_linux -lmlx_Linux -L/usr/lib -Imlx_linux -lXext -lX11 -lm -lz #-fsanitize=address
 
 VEC3			:= vec3/vec3.c
 PARSE			:=	parse/parser.c parse/errs.c parse/garbage.c
 # RAYTRCING		:=	raytracing/raytracing.c
 # COLOR			:=	color/color.c
 # RAY				:=	ray/ray.c
-GEO				:=  geo/geo.c
+GEO				:=  geo/copy.c
 GNL				:=	gnl/get_next_line.c gnl/get_next_line_utils.c
 
 SRCS 			:= $(GNL) $(PARSE) $(GEO) $(VEC3)
