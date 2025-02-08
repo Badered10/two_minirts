@@ -6,7 +6,7 @@
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 17:17:09 by baouragh          #+#    #+#             */
-/*   Updated: 2025/01/29 13:17:53 by baouragh         ###   ########.fr       */
+/*   Updated: 2025/02/05 17:21:12 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -173,7 +173,7 @@ void add_to_garbge(t_list **garbge, void *adress)
         ft_lstclear(garbge, free);
         exit(1);
     }
-    ft_lstadd_back(garbge, node);
+    ft_lstadd_front(garbge, node);
 }
 
 void *safe_malloc(size_t size, t_list **garbge)
@@ -203,14 +203,14 @@ t_img *new_img( int width, int height, void *mlx, t_list **garbge)
     node = ft_lstnew(img->img);
     if (!node)
         return (ft_lstclear(garbge, free), NULL);
-    ft_lstadd_back(garbge, node);
+    ft_lstadd_front(garbge, node);
     img->addr = mlx_get_data_addr(img->img, &img->bits_per_pixel, &img->line_length, &img->endian);
     if (!img->addr)
         return (ft_lstclear(garbge, free), NULL);
     node = ft_lstnew(img->addr);
     if (!node)
         return (ft_lstclear(garbge, free), NULL);
-    ft_lstadd_back(garbge, node);
+    ft_lstadd_front(garbge, node);
     return (img);
 }
 

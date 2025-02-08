@@ -29,8 +29,8 @@
 
 #define VEC 0
 
-#define EPSILON 0.00001
-#define PI 3.14159265359
+#define EPSILON 0.00000000000000000000000000000000001
+#define PI 3.14159265358979323846264338327950
 
 
 typedef enum s_type
@@ -162,6 +162,16 @@ typedef struct s_comps
     bool inside;
 } t_comps;
 
+typedef struct s_camera
+{
+    double hsize;
+    double vsize;
+    double field_of_view;
+    double half_width;
+    double half_height;
+    double pixel_size;
+    t_matrix *transform;
+} t_camera;
 
 
 

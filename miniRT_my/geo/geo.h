@@ -42,10 +42,10 @@ typedef enum s_type
 
 typedef struct s_tuple
 {
-    double x;
-    double y;
-    double z;
-    int w;
+    double x; // C : 0 - 1 -> 0 - 255 // R
+    double y; //  :  // G
+    double z; //  // B
+    int w; // 0 1 20
 } t_tuple;
 
 typedef struct projectile

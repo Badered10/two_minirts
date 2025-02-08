@@ -6,7 +6,7 @@
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 17:17:09 by baouragh          #+#    #+#             */
-/*   Updated: 2025/02/02 21:06:01 by baouragh         ###   ########.fr       */
+/*   Updated: 2025/02/07 23:08:17 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -505,7 +505,7 @@ t_tuple *matrix_tuple_mul4x4(t_matrix *a, t_tuple *t) // JUST FOR 4X4 matrixs
     double res;
 
     if (!a || !t || !a->data || a->size != 4)
-        return (0);
+        return (NULL);
     tuple = create_tuple(0, 0, 0, 0);
     i = 0;
     while (i < 4)
@@ -741,7 +741,7 @@ t_matrix *rotation_y(double rad)
         return (NULL);
 
     matrix->data[3][3] = 1;
-    matrix->data[2][1] = 1;
+    matrix->data[1][1] = 1;
     
     matrix->data[0][0] = cos(rad);
     matrix->data[0][2] = sin(rad);
@@ -1069,10 +1069,7 @@ double hit(t_xs *xs) // return a positive num if there is intersction accure , o
     while (++i < xs->count)
     {
         if (xs->inters[i].t > 0 )
-        {
-            printf("%f\n",xs->inters[i].t);
             return (xs->inters[i].t);
-        }
     }
     return (-1);
 }
@@ -1230,17 +1227,26 @@ t_tuple *lighting(t_material *material, t_light *light, t_tuple *point, t_tuple 
 void draw_sphere(t_canvas *can, void *win)
 {
     t_light *light;
+    t_light *light1;
+    t_light *light2;
     t_tuple *light_pose;
+    t_tuple *light_pose1;
+    t_tuple *light_pose2;
     t_tuple *light_color;
+    int num_lights;
+    int var;
 
     t_tuple *orgin;
     t_tuple *dir;
     t_ray *ray;
     t_tuple *color;
     t_tuple *m_color;
+    t_tuple *m_color2;
     t_tuple *color1;
     t_object *object;
+    t_object *object1;
     t_xs *xs;
+    t_xs *xs1;
     t_shearing *shr;
     double wall_z;
     double wall_size;
@@ -1255,18 +1261,28 @@ void draw_sphere(t_canvas *can, void *win)
     color = create_color(1, 0, 0);
     color1 = create_color(1, 1, 1);
     m_color = create_color(1, 0, 0);
+    m_color2 = create_color(0, 1, 0);
     object = create_object(SPHERE);
+    object1 = create_object(SPHERE);
     wall_z = 10;
     wall_size = 7;
     pixel_size = wall_size / can->height;
     half = wall_size / 2;
     
     set_color_material(object->shape->sphere->material, m_color);
-    // set_transform(&object, matrix_multiply(scaling(1, 0.5, 1), rotation_z(deg_to_rad(PI/5)), 4));
+    set_transform(&object, matrix_multiply(translation(0.25, 0, 0), scaling(0.25, 0.25, 0.25), 4));
+
+    set_color_material(object1->shape->sphere->material, m_color2);
+    set_transform(&object1, scaling(0.25, 0.25, 0.25));
     
     light_pose = create_point(-10, 10, -10);
+    // light_pose1 = create_point(-10, 10, 10);
+    // light_pose2 = create_point(-10, -10, -10);
     light_color = create_point(1, 1, 1);
     light = point_light(light_pose, light_color);
+    // light1 = point_light(light_pose1, light_color);
+    // light2 = point_light(light_pose2, light_color);
+    num_lights = 3;
     
     int y;
     int x;
@@ -1276,7 +1292,9 @@ void draw_sphere(t_canvas *can, void *win)
     t_tuple *pose;
     t_tuple *point;
     t_tuple *normal;
+    t_tuple *normal1;
     t_tuple *eye;
+    t_tuple *res;
     while (++y < can->height - 1)
     {
         
@@ -1288,19 +1306,20 @@ void draw_sphere(t_canvas *can, void *win)
             pose = create_point(world_x, world_y, wall_z);
             ray = create_ray(orgin, norm_tuple(sub_tuple(pose, orgin)));
             xs = intersect(object, ray);
+            xs1 = intersect(object1, ray);
+            add_intersect(&xs, xs1);
             if (hit(xs) != -1)
             {
                 point = ray_position(ray, hit(xs));
                 normal = normal_at(object, point);
+                normal1 = normal_at(object1, point);
                 eye = mul_tuple(ray->direction, -1);
-                // write_pixel(can, x, y, lighting(object->shape->sphere->material, light, point, eye, normal));
-                mlx_pixel_put(can->mlx, win, x, y, color_to_int(lighting(object->shape->sphere->material, light, point, eye, normal)));
+                res = lighting(object->shape->sphere->material, light, point, eye, normal);
+                // mlx_pixel_put(can->mlx, win, x, y, color_to_int(res));
+                res = lighting(object1->shape->sphere->material, light, point, eye, normal1);
+                mlx_pixel_put(can->mlx, win, x, y, color_to_int(res));
             }
 
-            // if (hit2(list) != -1)
-            //     write_pixel(can, x, y, color);
-            // else
-            //     write_pixel(can, x, y, color1);
 
         }
     }
@@ -1373,7 +1392,6 @@ t_xs *intersect_world(t_world *world, t_ray *ray)
         add_intersect(&xs, x);
         lst = lst->next;
     }
-    print_intersects(xs);
     return (xs);
     
 }
@@ -1432,8 +1450,6 @@ t_tuple *shade_hit(t_world *world, t_comps *comps) // return a color
         free(res);
         res = n_res;
     }
-    printf("RES from shade_hit: ");
-    print_type(res);
     return (res);
 }
 
@@ -1480,61 +1496,199 @@ t_matrix *view_transform(t_tuple *from, t_tuple *to, t_tuple *up)
     arr[2][2] = -forword->z;
     arr[3][3] = 1;
     orientation = create_matrix(4, 4, (const double **)arr);
-    print_matrix(orientation);
     trans = translation(-from->x, -from->y, -from->z);
     res = matrix_multiply(orientation, trans, 4);
 
     return (res);
 }
 
+t_matrix *identity_matrix(void)
+{
+    t_matrix *identity_matrix;
+    
+    identity_matrix = create_matrix(4, 4, NULL);
+    identity_matrix->data[0][0] = 1;
+    identity_matrix->data[1][1] = 1;
+    identity_matrix->data[2][2] = 1;
+    identity_matrix->data[3][3] = 1;
+    return (identity_matrix);
+}
+
+void pixel_size_cal(t_camera *cam)
+{
+    double half_view;
+    double aspect;
+
+    half_view = tan(cam->field_of_view / 2);
+    aspect = (double)(cam->hsize) / cam->vsize;
+    
+    if (aspect >= 1)
+    {
+        cam->half_width = half_view;
+        cam->half_height = half_view / aspect;
+    }
+    else
+    {
+        cam->half_width = half_view * aspect;
+        cam->half_height = half_view;
+    }
+    cam->pixel_size = (cam->half_width * 2) / cam->hsize;
+}
+
+t_camera *create_camera(int hsize, int vsize, int field_of_view)
+{
+    t_camera *cam;
+
+    cam = malloc(sizeof(t_camera));
+    if (!cam)
+        return (NULL);
+    cam->field_of_view = field_of_view;
+    cam->hsize = hsize;
+    cam->vsize = vsize;
+    cam->transform = identity_matrix();
+    pixel_size_cal(cam);
+    return (cam);
+}
+t_ray *ray_for_pixel(t_camera *cam, int px, int py)
+{
+    double xoffset; 
+    double yoffset;
+    double world_x;
+    double world_y;
+    t_tuple *pixel;
+    t_tuple *origin;
+    t_tuple *direction; 
+    
+    xoffset = (px + 0.5) * cam->pixel_size;
+    yoffset = (py + 0.5) * cam->pixel_size;
+    world_x = cam->half_width - xoffset;
+    world_y = cam->half_height - yoffset;
+    pixel = matrix_tuple_mul4x4(matrix_inverse(cam->transform), create_point(world_x, world_y, -1));
+    origin = matrix_tuple_mul4x4(matrix_inverse(cam->transform), create_point(0 ,0 ,0));
+    direction = norm_tuple(sub_tuple(pixel, origin));
+    return (create_ray(origin, direction));
+}
+
+ t_canvas *render(t_camera *cam, t_world *world, void *mlx)
+{
+    t_canvas *image;
+    t_tuple *color;
+    t_ray *ray;
+    int x;
+    int y;
+
+    image = create_canvas(cam->hsize, cam->vsize, mlx);
+    y = 0;
+    while(y < cam->vsize - 1)
+    {
+        x = 0;
+        while (x < cam->hsize - 1)
+        {
+            ray = ray_for_pixel(cam , x, y);
+            color = color_at(world, ray);
+            write_pixel(image, x, y, color);
+            x++;
+        }
+        y++;
+    }
+    return (image);   
+}
 
 
 // MAIN -----------------------------------------------------------------------
 int main()
 {
-    t_tuple *from = create_point(1, 3, 2);
-    t_tuple *to = create_point(4, -2, 8);
-    t_tuple *up = create_vector(1, 1, 0);
-    t_matrix *t = view_transform(from, to, up);
-    print_matrix(t);
-    // print_matrix(translation(0, 0, -8));
-    exit(1);
+    t_world *world;
+    t_camera *cam;
+    t_canvas *image;
 
-    t_canvas *can;
-    int canavas_pixel;
+    t_object *floor;
+    t_object *left_wall;
+    t_object *right_wall;
+    t_object *middle;
+    t_object *right;
+    t_object *left;
+
+    t_matrix *mul[10];
     void *mlx;
-    void *win;
 
+    floor = create_object(SPHERE);
+    left_wall = create_object(SPHERE);
+    right_wall = create_object(SPHERE);
+    middle = create_object(SPHERE);
+    right = create_object(SPHERE);
+    left = create_object(SPHERE);
+
+    floor->shape->sphere->transform = scaling(10, 0.01, 10);
+    floor->shape->sphere->material = create_material();
+    floor->shape->sphere->material->color = create_color(1, 0.9, 0.9);
+    floor->shape->sphere->material->specular = 0;
+
+    mul[0] = matrix_multiply(scaling(10, 0.01, 10), rotation_x(PI/2), 4);
+    mul[1] = matrix_multiply(mul[0] , rotation_y(-PI/4), 4);
+    mul[2] = matrix_multiply(mul[1] , translation(0, 0, 5), 4);
+    left_wall->shape->sphere->transform = mul[2];
+    left_wall->shape->sphere->material = floor->shape->sphere->material;
+
+    mul[3] = matrix_multiply(scaling(10, 0.01, 10), rotation_x(PI/2), 4);
+    mul[4] = matrix_multiply(mul[3] , rotation_y(PI/4), 4);
+    mul[5] = matrix_multiply(mul[4] , translation(0, 0, 5), 4);
+    right_wall->shape->sphere->transform = mul[5];
+    right_wall->shape->sphere->material = floor->shape->sphere->material;
+
+    middle->shape->sphere->transform = translation(-0.5, 1, 0.5);
+    middle->shape->sphere->material = create_material();
+    middle->shape->sphere->material->color = create_color(0.1, 1, 0.5);
+    middle->shape->sphere->material->diffuse = 0.7;
+    middle->shape->sphere->material->specular = 0.3;
+
+    mul[6] = matrix_multiply(translation(1.5, 0.5, -0.5) ,scaling(0.5, 0.5, 0.5), 4);
+    right->shape->sphere->transform = mul[6];
+    right->shape->sphere->material = create_material();
+    right->shape->sphere->material->color = create_color(0.5, 1, 0.1);
+    right->shape->sphere->material->diffuse = 0.7;
+    right->shape->sphere->material->specular = 0.3;
+
+    mul[4] = matrix_multiply(translation(-1.5, 0.33, -0.75) ,scaling(0.33, 0.33, 0.33), 4);
+    left->shape->sphere->transform = mul[4];
+    left->shape->sphere->material = create_material();
+    left->shape->sphere->material->color = create_color(1, 0.8, 0.1);
+    left->shape->sphere->material->diffuse = 0.7;
+    left->shape->sphere->material->specular = 0.3;
+
+    world = create_world();
+    world->lights_list = ft_lstnew(point_light(create_point(-10, 10, -10), create_color(1, 1, 1)));
+    t_list *objects;
+    t_list *node;
+    node = ft_lstnew(floor);
+    ft_lstadd_front(&objects, node);
+
+    node = ft_lstnew(left_wall);
+    ft_lstadd_front(&objects, node);
+
+    node = ft_lstnew(right_wall);
+    ft_lstadd_front(&objects, node);
+
+    node = ft_lstnew(right);
+    ft_lstadd_front(&objects, node);
+
+    node = ft_lstnew(left);
+    ft_lstadd_front(&objects, node);
+    
+    node = ft_lstnew(middle);
+    ft_lstadd_front(&objects, node);
+
+    world->objects_list = objects;
+    cam = create_camera(1920, 1080 , rad_to_deg(PI/3));
+    cam->transform = view_transform(create_point(0, 1.5, -5), create_point(0, 1, 0), create_vector(0, 1, 0));
+    
     mlx = mlx_init();
-    if (!mlx)
-        return (-1);
-    canavas_pixel = 800;
-    win = mlx_new_window(mlx, canavas_pixel, canavas_pixel, "WIN");
-    if (!win)
-        return (-1);
-    can = create_canvas(canavas_pixel, canavas_pixel, mlx);
-    draw_sphere(can, win);
-    // mlx_put_image_to_window(mlx, win, can->img->img, 0, 0);
-    // exit(1);
+    // world = default_world();
+    // cam = create_camera(11, 11, rad_to_deg(PI / 2));
+    image = render(cam, world, mlx);
+    // print_type (pixel_at(image, 5, 5));
+    void *win;
+    win = mlx_new_window(mlx, 1920, 1080, "mini_rt");
+    mlx_put_image_to_window(image->mlx, win , image->img->img, 0, 0);
     mlx_loop(mlx);
-    
-    // t_material *m;
-    // t_tuple *pose;
-    // t_tuple *color;
-    // t_tuple *point;
-    // t_tuple *eyev;
-    // t_tuple *normalv;
-    // t_light *light;
-
-    // pose = create_point(0, 0, 0);
-    // m = create_material();
-    // eyev = create_vector(0, 0, -1);
-    // normalv = create_vector(0, 0, -1);
-    // point = create_point(0, 0 , -10);
-    // color = create_color(1, 1, 1);
-    // light = point_light(point, color);
-
-    // print_type(lighting(m, light, pose, eyev, normalv));
-    
-    
 }
