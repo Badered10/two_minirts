@@ -7,6 +7,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include "../libft/libft.h"
+#include "get_next_line.h"
+
 
 #ifdef EPSILON
 #undef EPSILON
@@ -145,6 +148,8 @@ typedef struct s_world
 {
     t_list *lights_list;
     t_list *objects_list;
+    double ambient_light;
+    t_tuple *ambient_color;
 } t_world;
 
 typedef struct s_comps
@@ -168,6 +173,27 @@ typedef struct s_camera
     t_matrix *transform;
 } t_camera;
 
+typedef struct projectile
+{
+    t_tuple *position;
+    t_tuple *speed;
+} t_projectile;
+typedef struct environment
+{
+    t_tuple *gravity;
+    t_tuple *wind;
+} t_environment;
+
+typedef struct s_shearing
+{
+    double xy;
+    double xz;
+    double yx;
+    double yz;
+    double zx;
+    double zy;
+} t_shearing;
+
 // Function Declarations
 t_tuple *create_tuple(double x, double y, double z, double w);
 t_tuple *create_vector(double x, double y, double z);
@@ -186,7 +212,7 @@ double matrix_minor(t_matrix *matrix, int row, int column);
 double matrix_cofactor(t_matrix *matrix, int row, int column);
 t_ray *transform(t_ray *ray, t_matrix *matrix);
 t_material *create_material(void);
-t_matrix *create_matrix(int rows, int cols);
+t_matrix *create_matrix(int rows, int colums, const double **arr);
 t_matrix *scaling(double x, double y, double z);
 t_matrix *translation(double x, double y, double z);
 t_matrix *rotation_x(double radians);
@@ -199,8 +225,10 @@ t_canvas *render(t_camera *cam, t_world *world, void *mlx, void *win);
 t_light *point_light(t_tuple *position, t_tuple *intensity);
 t_matrix *view_transform(t_tuple *from, t_tuple *to, t_tuple *up);
 t_object *create_object(e_type type);
-t_object *create_sphere(void);
-t_object *create_plane(void);
-t_object *create_cylinder(void);
+t_sphere *create_sphere(void);
+t_tuple *create_color(double x, double y, double z);
+void parse_file(const char *filename, t_world *world, t_camera **cam);
+// t_object *create_plane(void);
+// t_object *create_cylinder(void);
 
 #endif

@@ -6,11 +6,10 @@
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 17:17:09 by baouragh          #+#    #+#             */
-/*   Updated: 2025/02/11 02:53:07 by baouragh         ###   ########.fr       */
+/*   Updated: 2025/02/11 06:13:23 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../libft/libft.h"
 #include "h.h"
 
 // DEBUG FUNCTION-------------------------------------------------------------------------------
@@ -979,6 +978,26 @@ t_intersect *intersection(double t, t_object *object)
     res->t = t;
     return (res);
 }
+t_plane *create_plane(void)
+{
+    t_plane *plane;
+
+    plane = malloc(sizeof(t_plane));
+    if (!plane)
+        return (NULL);
+    plane->transform = create_matrix(4, 4, NULL);
+    if (!plane->transform)
+        return (free(plane), NULL);
+    plane->transform->data[0][0] = 1;
+    plane->transform->data[1][1] = 1;
+    plane->transform->data[2][2] = 1;
+    plane->transform->data[3][3] = 1;
+    plane->material = create_material();
+    if (!plane->material)
+        return (free_matrix(plane->transform), free(plane), NULL);
+    return (plane);
+}
+
 t_shape *create_shape(e_type type)
 {
     t_shape *shape;
@@ -989,6 +1008,12 @@ t_shape *create_shape(e_type type)
     if (type == SPHERE)
     {
         shape->sphere = create_sphere();
+        if (!shape)
+            return (NULL);
+    }
+    if (type == PLANE)
+    {
+        shape->plane = create_plane();
         if (!shape)
             return (NULL);
     }
@@ -1535,7 +1560,7 @@ void pixel_size_cal(t_camera *cam)
     cam->pixel_size = (cam->half_width * 2) / cam->hsize;
 }
 
-t_camera *create_camera(int hsize, int vsize, int field_of_view)
+t_camera *create_camera(int hsize, int vsize, double field_of_view)
 {
     t_camera *cam;
 
@@ -1595,36 +1620,48 @@ t_ray *ray_for_pixel(t_camera *cam, int px, int py)
     return (image);   
 }
 
+// print object 
+void print_object(t_object *object)
+{
+    if (!object)
+        return ;
+    if (object->type == SPHERE)
+    {
+        printf("Sphere: \n");
+        printf("Center: %f %f %f\n", object->shape->sphere->center->x, object->shape->sphere->center->y, object->shape->sphere->center->z);
+        printf("Radius: %f\n", object->shape->sphere->r);
+    }
+    if (object->type == PLANE)
+    {
+        printf("Plane: \n");
+    }
+}
+// print_light
+void print_light(t_light *light)
+{
+    if (!light)
+        return ;
+    printf("Light: \n");
+    printf("Position: %f %f %f\n", light->position->x, light->position->y, light->position->z);
+    printf("Intensity: %f %f %f\n", light->intensity->x, light->intensity->y, light->intensity->z);
+}
 
 // MAIN -----------------------------------------------------------------------
 int main(int argc, char **argv)
 {
-    if (argc != 2)
-    {
-        fprintf(stderr, "Usage: %s <scene_file>\n", argv[0]);
-        return (1);
-    }
-
-    t_canvas *can;
-    t_world *world;
-    t_camera *cam;
     void *mlx;
     void *win;
+    t_canvas *canvas;
+    t_world *world;
+    t_camera *camera;
 
-    // Initialize MiniLibX
     mlx = mlx_init();
-    win = mlx_new_window(mlx, 500, 500, "miniRT");
-
-    // Create World
-    world = create_world();
-
-    // Parse the scene file
-    parse_file(argv[1], world, &cam);
-
-    // Render the scene
-    can = render(cam, world, mlx, win);
-    mlx_put_image_to_window(mlx, win, can->img->img, 0, 0);
+    win = mlx_new_window(mlx, 800, 600, "Sphere");
+    canvas = create_canvas(800, 600, mlx);
+    world = default_world();
+    camera = create_camera(800, 600, deg_to_rad(45));
+    camera->transform = view_transform(create_point(0, 0, -5), create_point(0, 0, 0), create_vector(0, 1, 0));
+    render(camera, world, mlx, win);
     mlx_loop(mlx);
-
     return (0);
 }
