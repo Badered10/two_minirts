@@ -6,7 +6,7 @@
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 17:17:09 by baouragh          #+#    #+#             */
-/*   Updated: 2025/02/07 23:08:17 by baouragh         ###   ########.fr       */
+/*   Updated: 2025/02/11 02:34:59 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1569,7 +1569,7 @@ t_ray *ray_for_pixel(t_camera *cam, int px, int py)
     return (create_ray(origin, direction));
 }
 
- t_canvas *render(t_camera *cam, t_world *world, void *mlx)
+ t_canvas *render(t_camera *cam, t_world *world, void *mlx, void *win)
 {
     t_canvas *image;
     t_tuple *color;
@@ -1587,6 +1587,7 @@ t_ray *ray_for_pixel(t_camera *cam, int px, int py)
             ray = ray_for_pixel(cam , x, y);
             color = color_at(world, ray);
             write_pixel(image, x, y, color);
+            mlx_pixel_put(mlx, win, x, y, color_to_int(color));
             x++;
         }
         y++;
@@ -1598,97 +1599,97 @@ t_ray *ray_for_pixel(t_camera *cam, int px, int py)
 // MAIN -----------------------------------------------------------------------
 int main()
 {
+    t_canvas *can;
     t_world *world;
     t_camera *cam;
-    t_canvas *image;
-
-    t_object *floor;
-    t_object *left_wall;
-    t_object *right_wall;
-    t_object *middle;
-    t_object *right;
-    t_object *left;
-
-    t_matrix *mul[10];
     void *mlx;
+    void *win;
 
-    floor = create_object(SPHERE);
-    left_wall = create_object(SPHERE);
-    right_wall = create_object(SPHERE);
-    middle = create_object(SPHERE);
-    right = create_object(SPHERE);
-    left = create_object(SPHERE);
+    // Initialize MiniLibX
+    mlx = mlx_init();
+    win = mlx_new_window(mlx, 500, 500, "miniRT");
 
+    // Create Camera
+    cam = create_camera(500, 500, PI / 3);
+    cam->transform = view_transform(create_point(0, 1.5, -5), create_point(0, 1, 0), create_vector(0, 1, 0));
+
+    // Create World
+    world = create_world();
+    world->lights_list = ft_lstnew(point_light(create_point(-10, 10, -10), create_color(1, 1, 1)));
+
+    // Create Floor
+    t_object *floor = create_object(SPHERE);
     floor->shape->sphere->transform = scaling(10, 0.01, 10);
     floor->shape->sphere->material = create_material();
     floor->shape->sphere->material->color = create_color(1, 0.9, 0.9);
     floor->shape->sphere->material->specular = 0;
 
-    mul[0] = matrix_multiply(scaling(10, 0.01, 10), rotation_x(PI/2), 4);
-    mul[1] = matrix_multiply(mul[0] , rotation_y(-PI/4), 4);
-    mul[2] = matrix_multiply(mul[1] , translation(0, 0, 5), 4);
-    left_wall->shape->sphere->transform = mul[2];
+    // Create Left Wall
+    t_object *left_wall = create_object(SPHERE);
+    left_wall->shape->sphere->transform = matrix_multiply(
+        translation(0, 0, 5),
+        matrix_multiply(
+            rotation_y(-PI / 4),
+            matrix_multiply(
+                rotation_x(PI / 2),
+                scaling(10, 0.01, 10), 4
+            ), 4
+        ), 4
+    );
     left_wall->shape->sphere->material = floor->shape->sphere->material;
 
-    mul[3] = matrix_multiply(scaling(10, 0.01, 10), rotation_x(PI/2), 4);
-    mul[4] = matrix_multiply(mul[3] , rotation_y(PI/4), 4);
-    mul[5] = matrix_multiply(mul[4] , translation(0, 0, 5), 4);
-    right_wall->shape->sphere->transform = mul[5];
+    // Create Right Wall
+    t_object *right_wall = create_object(SPHERE);
+    right_wall->shape->sphere->transform = 
+     matrix_multiply (translation(0, 0, 5),
+     matrix_multiply(rotation_y(PI / 4), 
+     matrix_multiply(rotation_x(PI / 2),scaling(10, 0.01, 10), 4), 4), 4 );
     right_wall->shape->sphere->material = floor->shape->sphere->material;
 
+    // Create Middle Sphere
+    t_object *middle = create_object(SPHERE);
     middle->shape->sphere->transform = translation(-0.5, 1, 0.5);
     middle->shape->sphere->material = create_material();
     middle->shape->sphere->material->color = create_color(0.1, 1, 0.5);
     middle->shape->sphere->material->diffuse = 0.7;
     middle->shape->sphere->material->specular = 0.3;
 
-    mul[6] = matrix_multiply(translation(1.5, 0.5, -0.5) ,scaling(0.5, 0.5, 0.5), 4);
-    right->shape->sphere->transform = mul[6];
+    // Create Right Sphere
+    t_object *right = create_object(SPHERE);
+    right->shape->sphere->transform = matrix_multiply(
+        translation(1.5, 0.5, -0.5),
+        scaling(0.5, 0.5, 0.5), 4
+    );
     right->shape->sphere->material = create_material();
     right->shape->sphere->material->color = create_color(0.5, 1, 0.1);
     right->shape->sphere->material->diffuse = 0.7;
     right->shape->sphere->material->specular = 0.3;
 
-    mul[4] = matrix_multiply(translation(-1.5, 0.33, -0.75) ,scaling(0.33, 0.33, 0.33), 4);
-    left->shape->sphere->transform = mul[4];
+    // Create Left Sphere
+    t_object *left = create_object(SPHERE);
+    left->shape->sphere->transform = matrix_multiply(
+        translation(-1.5, 0.33, -0.75),
+        scaling(0.33, 0.33, 0.33), 4
+    );
     left->shape->sphere->material = create_material();
     left->shape->sphere->material->color = create_color(1, 0.8, 0.1);
     left->shape->sphere->material->diffuse = 0.7;
     left->shape->sphere->material->specular = 0.3;
 
-    world = create_world();
-    world->lights_list = ft_lstnew(point_light(create_point(-10, 10, -10), create_color(1, 1, 1)));
-    t_list *objects;
-    t_list *node;
-    node = ft_lstnew(floor);
-    ft_lstadd_front(&objects, node);
-
-    node = ft_lstnew(left_wall);
-    ft_lstadd_front(&objects, node);
-
-    node = ft_lstnew(right_wall);
-    ft_lstadd_front(&objects, node);
-
-    node = ft_lstnew(right);
-    ft_lstadd_front(&objects, node);
-
-    node = ft_lstnew(left);
-    ft_lstadd_front(&objects, node);
-    
-    node = ft_lstnew(middle);
-    ft_lstadd_front(&objects, node);
-
+    // Add objects to the world
+    t_list *objects = NULL;
+    ft_lstadd_front(&objects, ft_lstnew(floor));
+    ft_lstadd_front(&objects, ft_lstnew(left_wall));
+    ft_lstadd_front(&objects, ft_lstnew(right_wall));
+    ft_lstadd_front(&objects, ft_lstnew(middle));
+    ft_lstadd_front(&objects, ft_lstnew(right));
+    ft_lstadd_front(&objects, ft_lstnew(left));
     world->objects_list = objects;
-    cam = create_camera(1920, 1080 , rad_to_deg(PI/3));
-    cam->transform = view_transform(create_point(0, 1.5, -5), create_point(0, 1, 0), create_vector(0, 1, 0));
-    
-    mlx = mlx_init();
-    // world = default_world();
-    // cam = create_camera(11, 11, rad_to_deg(PI / 2));
-    image = render(cam, world, mlx);
-    // print_type (pixel_at(image, 5, 5));
-    void *win;
-    win = mlx_new_window(mlx, 1920, 1080, "mini_rt");
-    mlx_put_image_to_window(image->mlx, win , image->img->img, 0, 0);
+
+    // Render the scene
+    can = render(cam, world, mlx, win);
+    mlx_put_image_to_window(mlx, win, can->img->img, 0, 0);
     mlx_loop(mlx);
+
+    return (0);
 }
