@@ -6,7 +6,7 @@
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 17:17:09 by baouragh          #+#    #+#             */
-/*   Updated: 2025/02/11 02:34:59 by baouragh         ###   ########.fr       */
+/*   Updated: 2025/02/11 02:53:07 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1597,8 +1597,14 @@ t_ray *ray_for_pixel(t_camera *cam, int px, int py)
 
 
 // MAIN -----------------------------------------------------------------------
-int main()
+int main(int argc, char **argv)
 {
+    if (argc != 2)
+    {
+        fprintf(stderr, "Usage: %s <scene_file>\n", argv[0]);
+        return (1);
+    }
+
     t_canvas *can;
     t_world *world;
     t_camera *cam;
@@ -1609,82 +1615,11 @@ int main()
     mlx = mlx_init();
     win = mlx_new_window(mlx, 500, 500, "miniRT");
 
-    // Create Camera
-    cam = create_camera(500, 500, PI / 3);
-    cam->transform = view_transform(create_point(0, 1.5, -5), create_point(0, 1, 0), create_vector(0, 1, 0));
-
     // Create World
     world = create_world();
-    world->lights_list = ft_lstnew(point_light(create_point(-10, 10, -10), create_color(1, 1, 1)));
 
-    // Create Floor
-    t_object *floor = create_object(SPHERE);
-    floor->shape->sphere->transform = scaling(10, 0.01, 10);
-    floor->shape->sphere->material = create_material();
-    floor->shape->sphere->material->color = create_color(1, 0.9, 0.9);
-    floor->shape->sphere->material->specular = 0;
-
-    // Create Left Wall
-    t_object *left_wall = create_object(SPHERE);
-    left_wall->shape->sphere->transform = matrix_multiply(
-        translation(0, 0, 5),
-        matrix_multiply(
-            rotation_y(-PI / 4),
-            matrix_multiply(
-                rotation_x(PI / 2),
-                scaling(10, 0.01, 10), 4
-            ), 4
-        ), 4
-    );
-    left_wall->shape->sphere->material = floor->shape->sphere->material;
-
-    // Create Right Wall
-    t_object *right_wall = create_object(SPHERE);
-    right_wall->shape->sphere->transform = 
-     matrix_multiply (translation(0, 0, 5),
-     matrix_multiply(rotation_y(PI / 4), 
-     matrix_multiply(rotation_x(PI / 2),scaling(10, 0.01, 10), 4), 4), 4 );
-    right_wall->shape->sphere->material = floor->shape->sphere->material;
-
-    // Create Middle Sphere
-    t_object *middle = create_object(SPHERE);
-    middle->shape->sphere->transform = translation(-0.5, 1, 0.5);
-    middle->shape->sphere->material = create_material();
-    middle->shape->sphere->material->color = create_color(0.1, 1, 0.5);
-    middle->shape->sphere->material->diffuse = 0.7;
-    middle->shape->sphere->material->specular = 0.3;
-
-    // Create Right Sphere
-    t_object *right = create_object(SPHERE);
-    right->shape->sphere->transform = matrix_multiply(
-        translation(1.5, 0.5, -0.5),
-        scaling(0.5, 0.5, 0.5), 4
-    );
-    right->shape->sphere->material = create_material();
-    right->shape->sphere->material->color = create_color(0.5, 1, 0.1);
-    right->shape->sphere->material->diffuse = 0.7;
-    right->shape->sphere->material->specular = 0.3;
-
-    // Create Left Sphere
-    t_object *left = create_object(SPHERE);
-    left->shape->sphere->transform = matrix_multiply(
-        translation(-1.5, 0.33, -0.75),
-        scaling(0.33, 0.33, 0.33), 4
-    );
-    left->shape->sphere->material = create_material();
-    left->shape->sphere->material->color = create_color(1, 0.8, 0.1);
-    left->shape->sphere->material->diffuse = 0.7;
-    left->shape->sphere->material->specular = 0.3;
-
-    // Add objects to the world
-    t_list *objects = NULL;
-    ft_lstadd_front(&objects, ft_lstnew(floor));
-    ft_lstadd_front(&objects, ft_lstnew(left_wall));
-    ft_lstadd_front(&objects, ft_lstnew(right_wall));
-    ft_lstadd_front(&objects, ft_lstnew(middle));
-    ft_lstadd_front(&objects, ft_lstnew(right));
-    ft_lstadd_front(&objects, ft_lstnew(left));
-    world->objects_list = objects;
+    // Parse the scene file
+    parse_file(argv[1], world, &cam);
 
     // Render the scene
     can = render(cam, world, mlx, win);
