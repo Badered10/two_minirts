@@ -228,6 +228,7 @@ t_object *create_object(e_type type);
 t_sphere *create_sphere(void);
 t_tuple *create_color(double x, double y, double z);
 void parse_file(const char *filename, t_world *world, t_camera **cam);
+bool is_shadowed(t_world *world, t_tuple *point);
 // t_object *create_plane(void);
 // t_object *create_cylinder(void);
 
