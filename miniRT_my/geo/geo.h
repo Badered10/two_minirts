@@ -31,7 +31,7 @@
 
 #define VEC 0
 
-#define EPSILON 0.00000000000000000000000000000000001
+#define EPSILON 0.001
 #define PI 3.14159265358979323846264338327950
 
 
@@ -45,7 +45,7 @@ typedef struct s_tuple
     double x; // C : 0 - 1 -> 0 - 255 // R
     double y; //  :  // G
     double z; //  // B
-    int w; // 0 1 20
+    double w; // 0 1 20
 } t_tuple;
 
 typedef struct projectile

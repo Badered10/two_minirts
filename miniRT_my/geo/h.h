@@ -31,8 +31,8 @@
 
 #define VEC 0
 
-#define EPSILON 0.00000000000000000000000000000000001
-#define PI 3.14159265358979323846264338327950
+#define EPSILON 0.0001
+#define PI 3.141592653589793238
 
 typedef enum s_type
 {
@@ -46,7 +46,7 @@ typedef struct s_tuple
     double x;
     double y;
     double z;
-    int w;
+    double w;
 } t_tuple;
 
 typedef struct s_img 
@@ -160,6 +160,7 @@ typedef struct s_comps
     t_tuple *eyev;
     t_tuple *normalv;
     bool inside;
+    t_tuple *over_point;
 } t_comps;
 
 typedef struct s_camera
@@ -229,6 +230,7 @@ t_sphere *create_sphere(void);
 t_tuple *create_color(double x, double y, double z);
 void parse_file(const char *filename, t_world *world, t_camera **cam);
 bool is_shadowed(t_world *world, t_tuple *point);
+t_xs *intersect(t_object *object, t_ray *ray);
 // t_object *create_plane(void);
 // t_object *create_cylinder(void);
 

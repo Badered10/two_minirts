@@ -6,7 +6,7 @@
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 17:17:09 by baouragh          #+#    #+#             */
-/*   Updated: 2025/02/13 09:18:48 by baouragh         ###   ########.fr       */
+/*   Updated: 2025/02/14 00:59:28 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,16 +19,16 @@ void print_type(t_tuple *tuple)
     if (!tuple)
         return (printf("ERR TUPLE NULL\n"), (void)0);
     if (tuple->w == 0)
-        printf("is Vector : x = %f, y = %f, z = %f, w = %d\n",
+        printf("is Vector : x = %f, y = %f, z = %f, w = %f\n",
             tuple->x, tuple->y, tuple->z, tuple->w);
     else if (tuple->w == 1)
-        printf("is Point : x = %f, y = %f, z = %f , w = %d\n",
+        printf("is Point : x = %f, y = %f, z = %f , w = %f\n",
             tuple->x, tuple->y, tuple->z, tuple->w);
     else if (tuple->w == 20)
-        printf("is Color : x = %f, y = %f, z = %f , w = %d\n",
+        printf("is Color : x = %f, y = %f, z = %f , w = %f\n",
             tuple->x, tuple->y, tuple->z, tuple->w);
     else
-        printf("is Undefined : x = %f, y = %f, z = %f , w = %d\n",
+        printf("is Undefined : x = %f, y = %f, z = %f , w = %f\n",
             tuple->x, tuple->y, tuple->z, tuple->w);
 }
 
@@ -920,52 +920,6 @@ void add_intersect(t_xs **xs, t_xs *x)
     free(tmp);
 }
 
-t_xs *intersect(t_object *object, t_ray *ray)
-{
-    t_xs *xs;        
-    t_tuple *sphere_to_ray;
-    t_ray *ray2;
-    double a;
-    double b;
-    double c;
-    double discriminant;
-    double t1;
-    double t2;
-    
-    if (!object || !object->shape || !ray)
-        return (NULL);
-    
-    ray2 = transform(ray, matrix_inverse(object->shape->sphere->transform));
-    sphere_to_ray = sub_tuple(ray2->origin, object->shape->sphere->center);
-    a = dot_tuple(ray2->direction, ray2->direction);
-    b = 2 * dot_tuple(ray2->direction, sphere_to_ray);
-    c = dot_tuple(sphere_to_ray, sphere_to_ray) - 1;
-    discriminant = b * b - 4 * a * c;
-    free(sphere_to_ray);
-    free(ray2);
-    if (discriminant < 0)
-        return (NULL);
-    xs = create_intersect(2);
-    if (!xs)
-        return (NULL);
-    xs->count = 2;
-    t1 = (-b - sqrt(discriminant)) / (2 * a);
-    t2 = (-b + sqrt(discriminant)) / (2 * a);
-    if (t1 > t2)
-    {
-        xs->inters[0].t = t2;
-        xs->inters[1].t = t1;
-    }
-    else
-    {
-        xs->inters[0].t = t1;
-        xs->inters[1].t = t2;
-    }
-    xs->inters[0].object = object;
-    xs->inters[1].object = object;
-    return (xs);
-}
-
 t_intersect *intersection(double t, t_object *object)
 {
     t_intersect *res;
@@ -1100,7 +1054,7 @@ int  set_transform(t_object **object, t_matrix *matrix)
     return (0);
 }
 
-t_tuple *normal_at(t_object *object, t_tuple *world_point)
+t_tuple *sphere_normal_at(t_object *object, t_tuple *world_point)
 {
     t_matrix *inverse;
     t_matrix *transpose;
@@ -1127,6 +1081,41 @@ t_tuple *normal_at(t_object *object, t_tuple *world_point)
     free_matrix(inverse);
     free_matrix(transpose);
     return (res);
+}
+
+t_tuple * normal_at(t_object *object, t_tuple *world_point)
+{
+    t_matrix *inverse;
+    t_matrix *transpose;
+    t_tuple *local_point;
+    t_tuple *local_normal;
+    t_tuple *world_normal;
+    t_tuple *res;
+
+    if (!object || !object->shape || !world_point)
+        return (NULL);
+    if (object->type == SPHERE)
+    {
+        inverse = matrix_inverse(object->shape->sphere->transform);
+        if (!inverse)
+            return (NULL);
+        local_point = matrix_tuple_mul4x4(inverse, world_point);
+        if (!local_point)
+            return(free_matrix(inverse), NULL);
+        local_normal = sphere_normal_at(object, world_point);
+        if (!local_normal)
+            return (free_matrix(inverse), free(local_point), NULL);
+        transpose = matrix_transpose4x4(inverse);
+        if (!transpose)
+            return (free(local_normal),free_matrix(inverse), free(local_point), NULL);
+        world_normal = matrix_tuple_mul4x4(transpose, local_normal);
+        if (!world_normal)
+            return (free_matrix(transpose) ,free(local_normal),free_matrix(inverse), free(local_point), NULL);
+        world_normal->w = 0;
+        res = norm_tuple(world_normal);
+        return (free_matrix(transpose) ,free(local_normal),free_matrix(inverse), free(local_point), res);
+    }
+    return (NULL);
 }
 
 t_tuple *reflect(t_tuple *in, t_tuple *normal)
@@ -1406,6 +1395,8 @@ t_xs *intersect_world(t_world *world, t_ray *ray)
 t_comps *prepare_computations(t_intersect *x, t_ray *ray)
 {
     t_comps *comps;
+    t_tuple *mul;
+
     comps = malloc(sizeof(t_comps));
     if (!comps)
         return (NULL);
@@ -1421,6 +1412,9 @@ t_comps *prepare_computations(t_intersect *x, t_ray *ray)
     }
     else
         comps->inside = false;
+    mul = mul_tuple(comps->normalv, EPSILON);
+    comps->over_point  = add_tuple(comps->point, mul);
+    free(mul);
     return(comps);
 }
 
@@ -1431,18 +1425,19 @@ t_tuple *shade_hit(t_world *world, t_comps *comps) // return a color
     t_tuple *res;
     t_tuple *n_res;
     t_list *lst;
+    bool shadowed;
     int i;
     
     i = 0;
     res = create_color(0, 0, 0);
+    shadowed = is_shadowed(world, comps->over_point);
     if (comps->object->type == SPHERE)
     {
         lst = world->lights_list;
         while (lst)
         {
             color = lighting(comps->object->shape->sphere->material, world->lights_list->content,
-            comps->point, comps->eyev, comps->normalv, is_shadowed(world, comps->point));
-            // return(color);
+            comps->point, comps->eyev, comps->normalv, shadowed);
             new_res = add_tuple(res, color);
             free(res);
             free(color);
@@ -1737,56 +1732,130 @@ bool is_shadowed(t_world *world, t_tuple *point)
     else
         return (false);
 }
+
+void print_material(t_material *m)
+{
+    print_type(m->color);
+    printf("ambient :%f, diffuse: %f, shininess: %f, specular :%f\n",m->ambient, m->diffuse, m->shininess, m->specular);
+}
+
+int sphere_calcule(t_sphere *sphere, t_ray *ray ,t_tuple *four)
+{
+    t_matrix *inverse;
+    t_ray *ray2;
+    t_tuple *sphere_to_ray;
+
+    inverse = matrix_inverse(sphere->transform);
+    if (!inverse)
+        return (-1);
+    ray2 = transform(ray, inverse);
+    if (!ray2)
+        return (free_matrix(inverse), -1);
+    sphere_to_ray = sub_tuple(ray2->origin, sphere->center);
+    if (!sphere_to_ray)
+        return (free_ray(ray2), free_matrix(inverse), -1);
+    four->x = dot_tuple(ray2->direction, ray2->direction);
+    four->y = 2 * dot_tuple(ray2->direction, sphere_to_ray);
+    four->z = dot_tuple(sphere_to_ray, sphere_to_ray) - 1;
+    four->w = (four->y * four->y) - (4 * four->x * four->z);
+    if (four->w < 0)
+        return (free(sphere_to_ray), free_ray(ray2), free_matrix(inverse), 1);
+    return (free(sphere_to_ray), free_ray(ray2), free_matrix(inverse), 0);
+}
+
+double sphere_helper(t_sphere *sphere, t_ray *ray, double *t1, double *t2) // 1 : NOT HITTED, 0 : HITTED, -1 : ERROR
+{     
+    t_tuple *four;
+    double dis;
+
+    four = create_tuple(0, 0, 0, 0);
+    if (!four)
+        return (-1);
+    dis = sphere_calcule(sphere, ray ,four);
+    if (dis == 1)
+        return (free(four), 1); // SPHERE NOT HITTED
+    else if (dis == -1)
+        return (free(four), -1); // ERROR
+    *t1 = (-four->y - sqrt(four->w)) / (2 * four->x);
+    *t2 = (-four->y + sqrt(four->w)) / (2 * four->x);
+    free(four);
+    return (0);
+}
+
+int prepare_xs(t_xs **xs, t_object *object, double t1, double t2)
+{
+    *xs = create_intersect(2);
+    if (!*xs)
+        return (-1); // TO DO free all world and exit
+    (*xs)->count = 2;
+    if (t1 > t2)
+    {
+        (*xs)->inters[0].t = t2;
+        (*xs)->inters[1].t = t1;
+    }
+    else
+    {
+        (*xs)->inters[0].t = t1;
+        (*xs)->inters[1].t = t2;
+    }
+    (*xs)->inters[0].object = object;
+    (*xs)->inters[1].object = object;
+    return (0);
+}
+
+t_xs *sphere_intersect(t_sphere *sphere, t_ray *ray, t_object *object)
+{
+    t_xs *xs;        
+    double t1;
+    double t2;
+    double check;
+    
+    if (!object || !object->shape || !sphere || !ray)
+        return (NULL); // TO DO free all world and exit()
+    check = sphere_helper(sphere, ray, &t1, &t2);
+    if (check == -1)
+        return (NULL); // TO DO free all world and exit()
+    else if (check == 1)
+        return (NULL); // FREE AND RETURN NULL , NOT ERROR JUST SPHERE NOT HITTED SO NO EXIT()
+    if (prepare_xs(&xs, object, t1, t2))
+        return (NULL); // TO DO free all world and exit()
+    return (xs);
+}
+void print_ray(t_ray *ray)
+{
+    print_type(ray->origin);
+    print_type(ray->direction);
+}
+t_xs *intersect(t_object *object, t_ray *ray)
+{
+    t_ray *local_ray;
+    t_matrix *inverse;
+
+    if (object->type == SPHERE)
+    {
+        inverse = matrix_inverse(object->shape->sphere->transform);
+        local_ray = transform(ray, inverse);
+        free_matrix(inverse); // Free the inverse matrix
+        return (sphere_intersect(object->shape->sphere, ray, object));
+    }
+    else if (object->type == CYLINDER)
+    {
+        inverse = matrix_inverse(object->shape->cylinder->transform);
+        local_ray = transform(ray, inverse);
+        free_matrix(inverse);
+        // return (cylinder_intersect(object->shape->cylinder, local_ray, object)); // TO DO
+    }
+    else if (object->type == PLANE)
+    {
+        inverse = matrix_inverse(object->shape->plane->transform);
+        local_ray = transform(ray, inverse);
+        free_matrix(inverse);
+        // return (plane_intersect(object->shape->plane, local_ray, object)); // TO DO
+    }
+    return (NULL);
+}
+
 int main()
 {
-    /*
-        Scenario: shade_hit() is given an intersection in shadow
-        Given w ← world()
-        And w.light ← point_light(point(0, 0, -10), color(1, 1, 1))
-        And s1 ← sphere()
-        And s1 is added to w
-        And s2 ← sphere() with:
-        | transform | translation(0, 0, 10) |
-        And s2 is added to w
-        And r ← ray(point(0, 0, 5), vector(0, 0, 1))
-        And i ← intersection(4, s2)
-        When comps ← prepare_computations(i, r)
-        And c ← shade_hit(w, comps)
-        Then c = color(0.1, 0.1, 0.1)
-        
-    */
-   t_world *w;
-
-   w = create_world();
-   w->lights_list = ft_lstnew(point_light(create_point(0, 0, -10), create_color(1, 1, 1)));
-   t_object *s1;
-   t_object *s2;
-   t_list *objs;
-
-   s1 = create_object(SPHERE);
-   s2 = create_object(SPHERE);
-   s2->shape->sphere->transform = translation(0, 0 ,10);
-   objs = NULL;
-   ft_lstadd_front(&objs, ft_lstnew(s1));
-   ft_lstadd_front(&objs, ft_lstnew(s2));
-   w->objects_list = objs;
-   t_ray *r = create_ray(create_point(0, 0, 5), create_vector(0, 0, 1));
-   printf("Ray origin: (%.2f, %.2f, %.2f)\n", r->origin->x, r->origin->y, r->origin->z);
-   printf("Ray direction: (%.2f, %.2f, %.2f)\n", r->direction->x, r->direction->y, r->direction->z);
-
-   t_intersect *i;
-   i = intersection(4, s2);
-   if (i != NULL)
-    printf("Intersection at distance: %.2f\n", i->t);
-    else
-    printf("No intersection\n");
-
-   t_comps *comps;
-   comps = prepare_computations(i, r);
-   printf("Computing intersection at point: (%.2f, %.2f, %.2f)\n", comps->point->x, comps->point->y, comps->point->z);
-
-   t_tuple *c = shade_hit(w, comps);
-   print_type(c);
-   render_sence();
-   
+    render_sence();
 }
