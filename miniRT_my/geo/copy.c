@@ -6,7 +6,7 @@
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 17:17:09 by baouragh          #+#    #+#             */
-/*   Updated: 2025/02/12 23:04:14 by baouragh         ###   ########.fr       */
+/*   Updated: 2025/02/13 09:18:48 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1196,12 +1196,16 @@ t_tuple *lighting(t_material *material, t_light *light, t_tuple *point, t_tuple 
     double light_dot_normal;
     double reflect_dot_eye;
     double factor;
-    
 
     effective_color = hadamard_product(material->color, light->intensity);
     lightv = norm_tuple(sub_tuple(light->position, point));
-    if (!in_shadow)
-        ambient = mul_tuple(effective_color, material->ambient);
+
+    // Ambient should always be computed
+    ambient = mul_tuple(effective_color, material->ambient);
+
+    if (in_shadow)
+        return ambient;  // Only return ambient when in shadow
+
     light_dot_normal = dot_tuple(lightv, normalv);
     if (light_dot_normal < 0)
     {
@@ -1210,8 +1214,7 @@ t_tuple *lighting(t_material *material, t_light *light, t_tuple *point, t_tuple 
     }
     else
     {
-        if (!in_shadow)
-            diffuse = mul_tuple(effective_color ,material->diffuse * light_dot_normal);
+        diffuse = mul_tuple(effective_color ,material->diffuse * light_dot_normal);
         reflectv = reflect(mul_tuple(lightv, -1), normalv);
         reflect_dot_eye =  dot_tuple(reflectv, eyev);
         if (reflect_dot_eye <= 0)
@@ -1222,12 +1225,11 @@ t_tuple *lighting(t_material *material, t_light *light, t_tuple *point, t_tuple 
             specular = mul_tuple(light->intensity , material->specular * factor);
         }
     }
-    if (!in_shadow)
-        tmp = add_tuple(ambient , add_tuple(diffuse ,specular));
-    else
-        return (specular);
-    return (create_color (tmp->x, tmp->y, tmp->z));
+
+    tmp = add_tuple(ambient , add_tuple(diffuse ,specular));
+    return create_color(tmp->x, tmp->y, tmp->z);
 }
+
 
 void draw_sphere(t_canvas *can, void *win)
 {
@@ -1602,99 +1604,102 @@ t_ray *ray_for_pixel(t_camera *cam, int px, int py)
 
 
 // MAIN -----------------------------------------------------------------------
-    // t_canvas *can;
-    // t_world *world;
-    // t_camera *cam;
-    // void *mlx;
-    // void *win;
+void render_sence(void)
+{
 
-    // // Initialize MiniLibX
-    // mlx = mlx_init();
-    // win = mlx_new_window(mlx, 1000, 500, "miniRT");
+    t_canvas *can;
+    t_world *world;
+    t_camera *cam;
+    void *mlx;
+    void *win;
 
-    // // Create Camera
-    // cam = create_camera(1000, 500, PI / 3);
-    // cam->transform = view_transform(create_point(0, 1.5, -5), create_point(0, 1, 0), create_vector(0, 1, 0));
+    // Initialize MiniLibX
+    mlx = mlx_init();
+    win = mlx_new_window(mlx, 500, 250, "miniRT");
 
-    // // Create World
-    // world = create_world();
-    // world->lights_list = ft_lstnew(point_light(create_point(-10, 10, -10), create_color(1, 1, 1)));
+    // Create Camera
+    cam = create_camera(500, 250, PI / 3);
+    cam->transform = view_transform(create_point(0, 1.5, -5), create_point(0, 1, 0), create_vector(0, 1, 0));
 
-    // // Create Floor
-    // t_object *floor = create_object(SPHERE);
-    // floor->shape->sphere->transform = scaling(10, 0.01, 10);
-    // floor->shape->sphere->material = create_material();
-    // floor->shape->sphere->material->color = create_color(1, 0.9, 0.9);
-    // floor->shape->sphere->material->specular = 0;
+    // Create World
+    world = create_world();
+    world->lights_list = ft_lstnew(point_light(create_point(-10, 10, -10), create_color(1, 1, 1)));
 
-    // // Create Left Wall
-    // t_object *left_wall = create_object(SPHERE);
-    // left_wall->shape->sphere->transform = matrix_multiply(
-    //     translation(0, 0, 5),
-    //     matrix_multiply(
-    //         rotation_y(-PI / 4),
-    //         matrix_multiply(
-    //             rotation_x(PI / 2),
-    //             scaling(10, 0.01, 10), 4
-    //         ), 4
-    //     ), 4
-    // );
-    // left_wall->shape->sphere->material = floor->shape->sphere->material;
+    // Create Floor
+    t_object *floor = create_object(SPHERE);
+    floor->shape->sphere->transform = scaling(10, 0.01, 10);
+    floor->shape->sphere->material = create_material();
+    floor->shape->sphere->material->color = create_color(1, 0.9, 0.9);
+    floor->shape->sphere->material->specular = 0;
 
-    // // Create Right Wall
-    // t_object *right_wall = create_object(SPHERE);
-    // right_wall->shape->sphere->transform = 
-    //  matrix_multiply (translation(0, 0, 5),
-    //  matrix_multiply(rotation_y(PI / 4), 
-    //  matrix_multiply(rotation_x(PI / 2),scaling(10, 0.01, 10), 4), 4), 4 );
-    // right_wall->shape->sphere->material = floor->shape->sphere->material;
+    // Create Left Wall
+    t_object *left_wall = create_object(SPHERE);
+    left_wall->shape->sphere->transform = matrix_multiply(
+        translation(0, 0, 5),
+        matrix_multiply(
+            rotation_y(-PI / 4),
+            matrix_multiply(
+                rotation_x(PI / 2),
+                scaling(10, 0.01, 10), 4
+            ), 4
+        ), 4
+    );
+    left_wall->shape->sphere->material = floor->shape->sphere->material;
 
-    // // Create Middle Sphere
-    // t_object *middle = create_object(SPHERE);
-    // middle->shape->sphere->transform = translation(-0.5, 1, 0.5);
-    // middle->shape->sphere->material = create_material();
-    // middle->shape->sphere->material->color = create_color(0.1, 1, 0.5);
-    // middle->shape->sphere->material->diffuse = 0.7;
-    // middle->shape->sphere->material->specular = 0.3;
+    // Create Right Wall
+    t_object *right_wall = create_object(SPHERE);
+    right_wall->shape->sphere->transform = 
+     matrix_multiply (translation(0, 0, 5),
+     matrix_multiply(rotation_y(PI / 4), 
+     matrix_multiply(rotation_x(PI / 2),scaling(10, 0.01, 10), 4), 4), 4 );
+    right_wall->shape->sphere->material = floor->shape->sphere->material;
 
-    // // Create Right Sphere
-    // t_object *right = create_object(SPHERE);
-    // right->shape->sphere->transform = matrix_multiply(
-    //     translation(1.5, 0.5, -0.5),
-    //     scaling(0.5, 0.5, 0.5), 4
-    // );
-    // right->shape->sphere->material = create_material();
-    // right->shape->sphere->material->color = create_color(0.5, 1, 0.1);
-    // right->shape->sphere->material->diffuse = 0.7;
-    // right->shape->sphere->material->specular = 0.3;
+    // Create Middle Sphere
+    t_object *middle = create_object(SPHERE);
+    middle->shape->sphere->transform = translation(-0.5, 1, 0.5);
+    middle->shape->sphere->material = create_material();
+    middle->shape->sphere->material->color = create_color(0.1, 1, 0.5);
+    middle->shape->sphere->material->diffuse = 0.7;
+    middle->shape->sphere->material->specular = 0.3;
 
-    // // Create Left Sphere
-    // t_object *left = create_object(SPHERE);
-    // left->shape->sphere->transform = matrix_multiply(
-    //     translation(-1.5, 0.33, -0.75),
-    //     scaling(0.33, 0.33, 0.33), 4
-    // );
-    // left->shape->sphere->material = create_material();
-    // left->shape->sphere->material->color = create_color(1, 0.8, 0.1);
-    // left->shape->sphere->material->diffuse = 0.7;
-    // left->shape->sphere->material->specular = 0.3;
+    // Create Right Sphere
+    t_object *right = create_object(SPHERE);
+    right->shape->sphere->transform = matrix_multiply(
+        translation(1.5, 0.5, -0.5),
+        scaling(0.5, 0.5, 0.5), 4
+    );
+    right->shape->sphere->material = create_material();
+    right->shape->sphere->material->color = create_color(0.5, 1, 0.1);
+    right->shape->sphere->material->diffuse = 0.7;
+    right->shape->sphere->material->specular = 0.3;
 
-    // // Add objects to the world
-    // t_list *objects = NULL;
-    // ft_lstadd_front(&objects, ft_lstnew(floor));
-    // ft_lstadd_front(&objects, ft_lstnew(left_wall));
-    // ft_lstadd_front(&objects, ft_lstnew(right_wall));
-    // ft_lstadd_front(&objects, ft_lstnew(middle));
-    // ft_lstadd_front(&objects, ft_lstnew(right));
-    // ft_lstadd_front(&objects, ft_lstnew(left));
-    // world->objects_list = objects;
+    // Create Left Sphere
+    t_object *left = create_object(SPHERE);
+    left->shape->sphere->transform = matrix_multiply(
+        translation(-1.5, 0.33, -0.75),
+        scaling(0.33, 0.33, 0.33), 4
+    );
+    left->shape->sphere->material = create_material();
+    left->shape->sphere->material->color = create_color(1, 0.8, 0.1);
+    left->shape->sphere->material->diffuse = 0.7;
+    left->shape->sphere->material->specular = 0.3;
 
-    // // Render the scene
-    // can = render(cam, world, mlx, win);
-    // mlx_put_image_to_window(mlx, win, can->img->img, 0, 0);
-    // mlx_loop(mlx);
+    // Add objects to the world
+    t_list *objects = NULL;
+    ft_lstadd_front(&objects, ft_lstnew(floor));
+    ft_lstadd_front(&objects, ft_lstnew(left_wall));
+    ft_lstadd_front(&objects, ft_lstnew(right_wall));
+    ft_lstadd_front(&objects, ft_lstnew(middle));
+    ft_lstadd_front(&objects, ft_lstnew(right));
+    ft_lstadd_front(&objects, ft_lstnew(left));
+    world->objects_list = objects;
 
-    // return (0);
+    // Render the scene
+    can = render(cam, world, mlx, win);
+    printf("Rendering done\n");
+    mlx_put_image_to_window(mlx, win, can->img->img, 0, 0);
+    mlx_loop(mlx);
+}
 /*
     function is_shadowed(world, point)
 
@@ -1767,13 +1772,13 @@ int main()
    w->objects_list = objs;
    t_ray *r = create_ray(create_point(0, 0, 5), create_vector(0, 0, 1));
    printf("Ray origin: (%.2f, %.2f, %.2f)\n", r->origin->x, r->origin->y, r->origin->z);
-printf("Ray direction: (%.2f, %.2f, %.2f)\n", r->direction->x, r->direction->y, r->direction->z);
+   printf("Ray direction: (%.2f, %.2f, %.2f)\n", r->direction->x, r->direction->y, r->direction->z);
 
    t_intersect *i;
    i = intersection(4, s2);
    if (i != NULL)
     printf("Intersection at distance: %.2f\n", i->t);
-else
+    else
     printf("No intersection\n");
 
    t_comps *comps;
@@ -1782,4 +1787,6 @@ else
 
    t_tuple *c = shade_hit(w, comps);
    print_type(c);
+   render_sence();
+   
 }
