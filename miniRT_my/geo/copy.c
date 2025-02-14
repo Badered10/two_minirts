@@ -6,7 +6,7 @@
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 17:17:09 by baouragh          #+#    #+#             */
-/*   Updated: 2025/02/14 00:59:28 by baouragh         ###   ########.fr       */
+/*   Updated: 2025/02/14 04:38:05 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -964,41 +964,6 @@ t_object *create_object(e_type type)
     return (object);
 }
 
-// void print_intersect(t_list *list)
-// {
-//     int  i;
-
-//     i = 0;
-//     if (!list)
-//         return ;
-//     printf("list.size = %d\n",ft_lstsize(list));
-//     while (list)
-//     {
-//         print_in((t_intersect *)(list->content));
-//         list = list->next;
-//     }
-// }
-
-// double hit(t_list *intr_list) // return a positive num if there is intersction accure , otherwise return negative number
-// {
-//     double res;
-//     double old;
-//     t_intersection *intr;
-    
-
-//     res = -1;
-//     old = 0;
-//     while (intr_list)
-//     {
-//         intr = intr_list->content;
-//         old = intr->t;
-//         if ((old > 0 && old < res) || res < 0)
-//             res = old;
-//         intr_list = intr_list->next;
-//     }
-//     return (res);
-// }
-
 void print_intersects(t_xs *xs)
 {
     t_intersect *tmp;
@@ -1054,68 +1019,84 @@ int  set_transform(t_object **object, t_matrix *matrix)
     return (0);
 }
 
-t_tuple *sphere_normal_at(t_object *object, t_tuple *world_point)
+t_tuple *sphere_local_normal_at(t_object *object, t_tuple *local_point)
 {
-    t_matrix *inverse;
-    t_matrix *transpose;
-    t_tuple *center;
-    t_tuple *object_point;
-    t_tuple *object_normal;
-    t_tuple *world_normal;
-    t_tuple *res;
-
-    center = create_point(0, 0, 0);
-    if (!center)
-        return (NULL);
-    inverse = matrix_inverse(object->shape->sphere->transform);
-    object_point = matrix_tuple_mul4x4(inverse, world_point);
-    object_normal = sub_tuple(object_point, center);
-    transpose = matrix_transpose4x4(inverse);
-    world_normal = matrix_tuple_mul4x4(transpose, object_normal);
-    world_normal->w = 0;
-    res = norm_tuple(world_normal);
-    free(center);
-    free(object_point);
-    free(object_normal);
-    free(world_normal);
-    free_matrix(inverse);
-    free_matrix(transpose);
-    return (res);
+    return (create_vector(local_point->x, local_point->y, local_point->z));
 }
 
-t_tuple * normal_at(t_object *object, t_tuple *world_point)
+t_tuple *plane_local_normal_at(t_object *object, t_tuple *local_point)
+{
+    return (create_vector(local_point->x, local_point->y, local_point->z));
+}
+
+int sphere_hundler(t_object *object, t_tuple *point, t_matrix **inverse, t_tuple **local_normal)
+{
+    t_tuple *local_point;
+
+    *inverse = matrix_inverse(object->shape->sphere->transform);
+    if (!*inverse)
+        return (-1);
+    local_point = matrix_tuple_mul4x4(*inverse, point);
+    if (!local_point)
+        return(-1);
+    *local_normal = sphere_local_normal_at(object, local_point);
+    if (!*local_normal)
+        return (-1);
+    return (free(local_point), 0);
+}
+
+int plane_hundler(t_object *object, t_tuple *point, t_matrix **inverse, t_tuple **local_normal)
+{
+    t_tuple *local_point;
+
+    *inverse = matrix_inverse(object->shape->plane->transform);
+    if (!*inverse)
+        return (-1);
+    local_point = matrix_tuple_mul4x4(*inverse, point);
+    if (!local_point)
+        return(-1);
+    *local_normal = sphere_local_normal_at(object, local_point);
+    if (!*local_normal)
+        return (free(local_point), -1);
+    return (free(local_point), 0);
+}
+int shared_calculations(t_matrix *inverse, t_tuple *local_normal, t_tuple **world_normal)
+{
+    t_matrix *transpose;
+
+    transpose = matrix_transpose4x4(inverse);
+    if (!transpose)
+       return (free(local_normal),free_matrix(inverse), -1);
+    *world_normal = matrix_tuple_mul4x4(transpose, local_normal);
+    if (!*world_normal)
+        return (free_matrix(transpose) ,free(local_normal),free_matrix(inverse), -1);
+    (*world_normal)->w = 0;
+    return (free_matrix(transpose) ,free(local_normal),free_matrix(inverse), 0);
+}
+
+t_tuple * normal_at(t_object *object, t_tuple *point)
 {
     t_matrix *inverse;
-    t_matrix *transpose;
-    t_tuple *local_point;
     t_tuple *local_normal;
     t_tuple *world_normal;
     t_tuple *res;
 
-    if (!object || !object->shape || !world_point)
+    if (!object || !object->shape || !point)
         return (NULL);
     if (object->type == SPHERE)
     {
-        inverse = matrix_inverse(object->shape->sphere->transform);
-        if (!inverse)
-            return (NULL);
-        local_point = matrix_tuple_mul4x4(inverse, world_point);
-        if (!local_point)
-            return(free_matrix(inverse), NULL);
-        local_normal = sphere_normal_at(object, world_point);
-        if (!local_normal)
-            return (free_matrix(inverse), free(local_point), NULL);
-        transpose = matrix_transpose4x4(inverse);
-        if (!transpose)
-            return (free(local_normal),free_matrix(inverse), free(local_point), NULL);
-        world_normal = matrix_tuple_mul4x4(transpose, local_normal);
-        if (!world_normal)
-            return (free_matrix(transpose) ,free(local_normal),free_matrix(inverse), free(local_point), NULL);
-        world_normal->w = 0;
-        res = norm_tuple(world_normal);
-        return (free_matrix(transpose) ,free(local_normal),free_matrix(inverse), free(local_point), res);
+        if (sphere_hundler(object, point, &inverse, &local_normal))
+           return (NULL); // TO DO free and exit()
     }
-    return (NULL);
+    else if (object->type == PLANE)
+    {
+        if (plane_hundler(object, point, &inverse, &local_normal))
+           return (NULL); // TO DO free and exit()
+    }
+    if (shared_calculations(inverse, local_normal, &world_normal))
+        return (NULL); // TO DO free and exit()
+    res = norm_tuple(world_normal);
+    return (free(world_normal), res);
 }
 
 t_tuple *reflect(t_tuple *in, t_tuple *normal)
@@ -1217,108 +1198,6 @@ t_tuple *lighting(t_material *material, t_light *light, t_tuple *point, t_tuple 
 
     tmp = add_tuple(ambient , add_tuple(diffuse ,specular));
     return create_color(tmp->x, tmp->y, tmp->z);
-}
-
-
-void draw_sphere(t_canvas *can, void *win)
-{
-    t_light *light;
-    t_light *light1;
-    t_light *light2;
-    t_tuple *light_pose;
-    t_tuple *light_pose1;
-    t_tuple *light_pose2;
-    t_tuple *light_color;
-    int num_lights;
-    int var;
-
-    t_tuple *orgin;
-    t_tuple *dir;
-    t_ray *ray;
-    t_tuple *color;
-    t_tuple *m_color;
-    t_tuple *m_color2;
-    t_tuple *color1;
-    t_object *object;
-    t_object *object1;
-    t_xs *xs;
-    t_xs *xs1;
-    t_shearing *shr;
-    double wall_z;
-    double wall_size;
-    double pixel_size;
-    double half;
-
-    shr = create_shearing();
-    shr->xy = 1;
-    if (!can || !can->mlx || !can->img || !can->img->img)
-        return ;
-    orgin = create_point(0, 0, -5);
-    color = create_color(1, 0, 0);
-    color1 = create_color(1, 1, 1);
-    m_color = create_color(1, 0, 0);
-    m_color2 = create_color(0, 1, 0);
-    object = create_object(SPHERE);
-    object1 = create_object(SPHERE);
-    wall_z = 10;
-    wall_size = 7;
-    pixel_size = wall_size / can->height;
-    half = wall_size / 2;
-    
-    set_color_material(object->shape->sphere->material, m_color);
-    set_transform(&object, matrix_multiply(translation(0.25, 0, 0), scaling(0.25, 0.25, 0.25), 4));
-
-    set_color_material(object1->shape->sphere->material, m_color2);
-    set_transform(&object1, scaling(0.25, 0.25, 0.25));
-    
-    light_pose = create_point(-10, 10, -10);
-    // light_pose1 = create_point(-10, 10, 10);
-    // light_pose2 = create_point(-10, -10, -10);
-    light_color = create_point(1, 1, 1);
-    light = point_light(light_pose, light_color);
-    // light1 = point_light(light_pose1, light_color);
-    // light2 = point_light(light_pose2, light_color);
-    num_lights = 3;
-    
-    int y;
-    int x;
-    y = -1;
-    double world_x;
-    double world_y;
-    t_tuple *pose;
-    t_tuple *point;
-    t_tuple *normal;
-    t_tuple *normal1;
-    t_tuple *eye;
-    t_tuple *res;
-    while (++y < can->height - 1)
-    {
-        
-        world_y = half - pixel_size * y;
-        x = -1;
-        while (++x < can->height - 1)
-        {
-            world_x = -half + pixel_size * x;
-            pose = create_point(world_x, world_y, wall_z);
-            ray = create_ray(orgin, norm_tuple(sub_tuple(pose, orgin)));
-            xs = intersect(object, ray);
-            xs1 = intersect(object1, ray);
-            add_intersect(&xs, xs1);
-            if (hit(xs) != -1)
-            {
-                point = ray_position(ray, hit(xs));
-                normal = normal_at(object, point);
-                normal1 = normal_at(object1, point);
-                eye = mul_tuple(ray->direction, -1);
-                res = lighting(object->shape->sphere->material, light, point, eye, normal, 0);
-                // mlx_pixel_put(can->mlx, win, x, y, color_to_int(res));
-                res = lighting(object1->shape->sphere->material, light, point, eye, normal1, 0);
-                mlx_pixel_put(can->mlx, win, x, y, color_to_int(res));
-            }
-
-
-        }
-    }
 }
 
 // WORLD 
@@ -1695,22 +1574,6 @@ void render_sence(void)
     mlx_put_image_to_window(mlx, win, can->img->img, 0, 0);
     mlx_loop(mlx);
 }
-/*
-    function is_shadowed(world, point)
-
-        v ← world.light.position - point
-        distance ← magnitude(v)
-        direction ← normalize(v)
-        r ← ray(point, direction)
-        intersections ← intersect_world(world, r)
-        h ← hit(intersections)
-        if h is present and h.t < distance
-        return true
-        else
-        return false
-        end if
-        end function
-*/
 
 bool is_shadowed(t_world *world, t_tuple *point)
 {
@@ -1857,5 +1720,14 @@ t_xs *intersect(t_object *object, t_ray *ray)
 
 int main()
 {
+    t_object *obj;
+    t_matrix *m;
+    
+    obj = create_object(SPHERE);
+    m = scaling(1, 0.5, 1);
+    m = matrix_multiply(m, rotation_z(PI/5), 4);
+    set_transform(&obj, m);
+    t_tuple *n = normal_at(obj, create_point(0, sqrt(2)/2, -sqrt(2)/2));
+    print_type(n);
     render_sence();
 }
