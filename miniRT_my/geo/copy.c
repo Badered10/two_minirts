@@ -6,7 +6,7 @@
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 17:17:09 by baouragh          #+#    #+#             */
-/*   Updated: 2025/02/14 04:38:05 by baouragh         ###   ########.fr       */
+/*   Updated: 2025/02/14 10:48:35 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -842,30 +842,6 @@ void free_ray(t_ray *ray)
     free(ray);
 }
 
-t_sphere *create_sphere(void)
-{
-    t_sphere *sphere;
-
-    sphere = malloc(sizeof(t_sphere));
-    if (!sphere)
-        return (NULL);
-    sphere->center = create_point(0, 0, 0);
-    if (!sphere->center)
-        return (free(sphere), NULL);
-    sphere->transform = create_matrix(4, 4, NULL);
-    if (!sphere->transform)
-        return (free(sphere->center),NULL);
-    sphere->transform->data[0][0] = 1;
-    sphere->transform->data[1][1] = 1;
-    sphere->transform->data[2][2] = 1;
-    sphere->transform->data[3][3] = 1;
-    sphere->material = create_material();
-    if (!sphere->material)
-        return (free_matrix(sphere->transform), free(sphere->center) ,free(sphere), NULL);
-    sphere->r = 1;
-    return (sphere);
-}
-
 t_xs *create_intersect(int count)
 {
     t_xs *xs;
@@ -933,6 +909,31 @@ t_intersect *intersection(double t, t_object *object)
     res->t = t;
     return (res);
 }
+
+t_sphere *create_sphere(void)
+{
+    t_sphere *sphere;
+
+    sphere = malloc(sizeof(t_sphere));
+    if (!sphere)
+        return (NULL);
+    sphere->center = create_point(0, 0, 0);
+    if (!sphere->center)
+        return (free(sphere), NULL);
+    sphere->r = 1;
+    return (sphere);
+}
+
+t_plane *create_plane(void)
+{
+    t_plane *plane;
+
+    plane = malloc(sizeof(t_plane));
+    if (!plane)
+        return (NULL);
+    return (plane);
+}
+
 t_shape *create_shape(e_type type)
 {
     t_shape *shape;
@@ -946,7 +947,29 @@ t_shape *create_shape(e_type type)
         if (!shape)
             return (NULL);
     }
+    else if (type == PLANE)
+    {
+        shape->plane = create_plane();
+        if (!shape)
+            return (NULL);
+    }
     return (shape);
+}
+
+void free_shape(t_object *object)
+{
+    if (!object || !object->shape)
+        return;
+    if (object->type == SPHERE)
+    {
+        free(object->shape->sphere->center);
+        free(object->shape->sphere);
+    }
+    else if (object->type == PLANE)
+    {
+        free(object->shape->plane);
+    }
+    free(object->shape);
 }
 
 t_object *create_object(e_type type)
@@ -960,6 +983,12 @@ t_object *create_object(e_type type)
     object->shape = create_shape(type);
     if (!object->shape)
         return (free(object), NULL);
+    object->transform = identity_matrix();
+    if (!object->transform)
+        return (free_shape(object), free(object),NULL);
+    object->material = create_material();
+    if (!object->material)
+        return (free_matrix(object->transform), free_shape(object) ,free(object), NULL);
     object->type = type;
     return (object);
 }
@@ -1009,58 +1038,49 @@ t_ray *transform(t_ray *ray, t_matrix *matrix)
 
 int  set_transform(t_object **object, t_matrix *matrix)
 {
-    if (!object || !*object || !(*object)->shape || !matrix)
+    if (!object || !*object || !(*object)->transform || !matrix)
         return (-1);
-    if ((*object)->type == SPHERE)
-    {
-        free((*object)->shape->sphere->transform);
-        (*object)->shape->sphere->transform = matrix;
-    }
+    free((*object)->transform);
+    (*object)->transform = matrix;
     return (0);
 }
 
-t_tuple *sphere_local_normal_at(t_object *object, t_tuple *local_point)
+t_tuple *sphere_local_normal_at(t_tuple *local_point)
 {
     return (create_vector(local_point->x, local_point->y, local_point->z));
 }
 
-t_tuple *plane_local_normal_at(t_object *object, t_tuple *local_point)
+t_tuple *plane_local_normal_at(void)
 {
-    return (create_vector(local_point->x, local_point->y, local_point->z));
+    // The plane's normal is always (0, 1, 0) in local space.
+    return (create_vector(0, 1, 0));
 }
 
-int sphere_hundler(t_object *object, t_tuple *point, t_matrix **inverse, t_tuple **local_normal)
+t_tuple *local_normal_at (t_object *object, t_tuple *local_point)
+{
+    if (object->type == SPHERE)
+        return (sphere_local_normal_at(local_point));
+    else if (object->type == PLANE)
+        return (plane_local_normal_at());
+    return (NULL);
+}
+
+int transformations(t_object *object, t_tuple *point, t_matrix **inverse, t_tuple **local_normal)
 {
     t_tuple *local_point;
 
-    *inverse = matrix_inverse(object->shape->sphere->transform);
+    *inverse = matrix_inverse(object->transform);
     if (!*inverse)
         return (-1);
     local_point = matrix_tuple_mul4x4(*inverse, point);
     if (!local_point)
         return(-1);
-    *local_normal = sphere_local_normal_at(object, local_point);
-    if (!*local_normal)
-        return (-1);
-    return (free(local_point), 0);
-}
-
-int plane_hundler(t_object *object, t_tuple *point, t_matrix **inverse, t_tuple **local_normal)
-{
-    t_tuple *local_point;
-
-    *inverse = matrix_inverse(object->shape->plane->transform);
-    if (!*inverse)
-        return (-1);
-    local_point = matrix_tuple_mul4x4(*inverse, point);
-    if (!local_point)
-        return(-1);
-    *local_normal = sphere_local_normal_at(object, local_point);
+    *local_normal = local_normal_at(object, local_point);
     if (!*local_normal)
         return (free(local_point), -1);
     return (free(local_point), 0);
 }
-int shared_calculations(t_matrix *inverse, t_tuple *local_normal, t_tuple **world_normal)
+int normal_calculations(t_matrix *inverse, t_tuple *local_normal, t_tuple **world_normal)
 {
     t_matrix *transpose;
 
@@ -1081,19 +1101,11 @@ t_tuple * normal_at(t_object *object, t_tuple *point)
     t_tuple *world_normal;
     t_tuple *res;
 
-    if (!object || !object->shape || !point)
+    if (!object || !object->shape || !object->transform || !object->material || !point)
         return (NULL);
-    if (object->type == SPHERE)
-    {
-        if (sphere_hundler(object, point, &inverse, &local_normal))
+    if (transformations(object, point, &inverse, &local_normal))
            return (NULL); // TO DO free and exit()
-    }
-    else if (object->type == PLANE)
-    {
-        if (plane_hundler(object, point, &inverse, &local_normal))
-           return (NULL); // TO DO free and exit()
-    }
-    if (shared_calculations(inverse, local_normal, &world_normal))
+    if (normal_calculations(inverse, local_normal, &world_normal))
         return (NULL); // TO DO free and exit()
     res = norm_tuple(world_normal);
     return (free(world_normal), res);
@@ -1237,9 +1249,9 @@ t_world *default_world(void)
     light = point_light(point, color);
     object1 = create_object(SPHERE);
     c = create_color(0.8, 1.0, 0.6);
-    set_color_material(object1->shape->sphere->material, c);
-    object1->shape->sphere->material->specular = 0.2;
-    object1->shape->sphere->material->diffuse = 0.7;
+    set_color_material(object1->material, c);
+    object1->material->specular = 0.2;
+    object1->material->diffuse = 0.7;
     object2 = create_object(SPHERE);
     set_transform(&object2, scaling(0.5, 0.5, 0.5));
     ft_lstadd_back(&light_list, ft_lstnew(light));
@@ -1315,7 +1327,7 @@ t_tuple *shade_hit(t_world *world, t_comps *comps) // return a color
         lst = world->lights_list;
         while (lst)
         {
-            color = lighting(comps->object->shape->sphere->material, world->lights_list->content,
+            color = lighting(comps->object->material, world->lights_list->content,
             comps->point, comps->eyev, comps->normalv, shadowed);
             new_res = add_tuple(res, color);
             free(res);
@@ -1478,7 +1490,7 @@ t_ray *ray_for_pixel(t_camera *cam, int px, int py)
 
 
 // MAIN -----------------------------------------------------------------------
-void render_sence(void)
+void render_scene(void)
 {
 
     t_canvas *can;
@@ -1501,14 +1513,14 @@ void render_sence(void)
 
     // Create Floor
     t_object *floor = create_object(SPHERE);
-    floor->shape->sphere->transform = scaling(10, 0.01, 10);
-    floor->shape->sphere->material = create_material();
-    floor->shape->sphere->material->color = create_color(1, 0.9, 0.9);
-    floor->shape->sphere->material->specular = 0;
+    floor->transform = scaling(10, 0.01, 10);
+    floor->material = create_material();
+    floor->material->color = create_color(1, 0.9, 0.9);
+    floor->material->specular = 0;
 
     // Create Left Wall
     t_object *left_wall = create_object(SPHERE);
-    left_wall->shape->sphere->transform = matrix_multiply(
+    left_wall->transform = matrix_multiply(
         translation(0, 0, 5),
         matrix_multiply(
             rotation_y(-PI / 4),
@@ -1518,45 +1530,45 @@ void render_sence(void)
             ), 4
         ), 4
     );
-    left_wall->shape->sphere->material = floor->shape->sphere->material;
+    left_wall->material = floor->material;
 
     // Create Right Wall
     t_object *right_wall = create_object(SPHERE);
-    right_wall->shape->sphere->transform = 
+    right_wall->transform = 
      matrix_multiply (translation(0, 0, 5),
      matrix_multiply(rotation_y(PI / 4), 
      matrix_multiply(rotation_x(PI / 2),scaling(10, 0.01, 10), 4), 4), 4 );
-    right_wall->shape->sphere->material = floor->shape->sphere->material;
+    right_wall->material = floor->material;
 
     // Create Middle Sphere
     t_object *middle = create_object(SPHERE);
-    middle->shape->sphere->transform = translation(-0.5, 1, 0.5);
-    middle->shape->sphere->material = create_material();
-    middle->shape->sphere->material->color = create_color(0.1, 1, 0.5);
-    middle->shape->sphere->material->diffuse = 0.7;
-    middle->shape->sphere->material->specular = 0.3;
+    middle->transform = translation(-0.5, 1, 0.5);
+    middle->material = create_material();
+    middle->material->color = create_color(0.1, 1, 0.5);
+    middle->material->diffuse = 0.7;
+    middle->material->specular = 0.3;
 
     // Create Right Sphere
     t_object *right = create_object(SPHERE);
-    right->shape->sphere->transform = matrix_multiply(
+    right->transform = matrix_multiply(
         translation(1.5, 0.5, -0.5),
         scaling(0.5, 0.5, 0.5), 4
     );
-    right->shape->sphere->material = create_material();
-    right->shape->sphere->material->color = create_color(0.5, 1, 0.1);
-    right->shape->sphere->material->diffuse = 0.7;
-    right->shape->sphere->material->specular = 0.3;
+    right->material = create_material();
+    right->material->color = create_color(0.5, 1, 0.1);
+    right->material->diffuse = 0.7;
+    right->material->specular = 0.3;
 
     // Create Left Sphere
     t_object *left = create_object(SPHERE);
-    left->shape->sphere->transform = matrix_multiply(
+    left->transform = matrix_multiply(
         translation(-1.5, 0.33, -0.75),
         scaling(0.33, 0.33, 0.33), 4
     );
-    left->shape->sphere->material = create_material();
-    left->shape->sphere->material->color = create_color(1, 0.8, 0.1);
-    left->shape->sphere->material->diffuse = 0.7;
-    left->shape->sphere->material->specular = 0.3;
+    left->material = create_material();
+    left->material->color = create_color(1, 0.8, 0.1);
+    left->material->diffuse = 0.7;
+    left->material->specular = 0.3;
 
     // Add objects to the world
     t_list *objects = NULL;
@@ -1574,6 +1586,8 @@ void render_sence(void)
     mlx_put_image_to_window(mlx, win, can->img->img, 0, 0);
     mlx_loop(mlx);
 }
+
+
 
 bool is_shadowed(t_world *world, t_tuple *point)
 {
@@ -1602,49 +1616,6 @@ void print_material(t_material *m)
     printf("ambient :%f, diffuse: %f, shininess: %f, specular :%f\n",m->ambient, m->diffuse, m->shininess, m->specular);
 }
 
-int sphere_calcule(t_sphere *sphere, t_ray *ray ,t_tuple *four)
-{
-    t_matrix *inverse;
-    t_ray *ray2;
-    t_tuple *sphere_to_ray;
-
-    inverse = matrix_inverse(sphere->transform);
-    if (!inverse)
-        return (-1);
-    ray2 = transform(ray, inverse);
-    if (!ray2)
-        return (free_matrix(inverse), -1);
-    sphere_to_ray = sub_tuple(ray2->origin, sphere->center);
-    if (!sphere_to_ray)
-        return (free_ray(ray2), free_matrix(inverse), -1);
-    four->x = dot_tuple(ray2->direction, ray2->direction);
-    four->y = 2 * dot_tuple(ray2->direction, sphere_to_ray);
-    four->z = dot_tuple(sphere_to_ray, sphere_to_ray) - 1;
-    four->w = (four->y * four->y) - (4 * four->x * four->z);
-    if (four->w < 0)
-        return (free(sphere_to_ray), free_ray(ray2), free_matrix(inverse), 1);
-    return (free(sphere_to_ray), free_ray(ray2), free_matrix(inverse), 0);
-}
-
-double sphere_helper(t_sphere *sphere, t_ray *ray, double *t1, double *t2) // 1 : NOT HITTED, 0 : HITTED, -1 : ERROR
-{     
-    t_tuple *four;
-    double dis;
-
-    four = create_tuple(0, 0, 0, 0);
-    if (!four)
-        return (-1);
-    dis = sphere_calcule(sphere, ray ,four);
-    if (dis == 1)
-        return (free(four), 1); // SPHERE NOT HITTED
-    else if (dis == -1)
-        return (free(four), -1); // ERROR
-    *t1 = (-four->y - sqrt(four->w)) / (2 * four->x);
-    *t2 = (-four->y + sqrt(four->w)) / (2 * four->x);
-    free(four);
-    return (0);
-}
-
 int prepare_xs(t_xs **xs, t_object *object, double t1, double t2)
 {
     *xs = create_intersect(2);
@@ -1665,17 +1636,56 @@ int prepare_xs(t_xs **xs, t_object *object, double t1, double t2)
     (*xs)->inters[1].object = object;
     return (0);
 }
+int sphere_calcule(t_object *object, t_ray *ray ,t_tuple *four)
+{
+    t_matrix *inverse;
+    t_ray *ray2;
+    t_tuple *sphere_to_ray;
 
-t_xs *sphere_intersect(t_sphere *sphere, t_ray *ray, t_object *object)
+    inverse = matrix_inverse(object->transform);
+    if (!inverse)
+        return (-1);
+    ray2 = transform(ray, inverse);
+    if (!ray2)
+        return (free_matrix(inverse), -1);
+    sphere_to_ray = sub_tuple(ray2->origin, object->shape->sphere->center);
+    if (!sphere_to_ray)
+        return (free_ray(ray2), free_matrix(inverse), -1);
+    four->x = dot_tuple(ray2->direction, ray2->direction);
+    four->y = 2 * dot_tuple(ray2->direction, sphere_to_ray);
+    four->z = dot_tuple(sphere_to_ray, sphere_to_ray) - 1;
+    four->w = (four->y * four->y) - (4 * four->x * four->z);
+    if (four->w < 0)
+        return (free(sphere_to_ray), free_ray(ray2), free_matrix(inverse), 1);
+    return (free(sphere_to_ray), free_ray(ray2), free_matrix(inverse), 0);
+}
+
+double sphere_helper(t_object *object, t_ray *ray, double *t1, double *t2) // 1 : NOT HITTED, 0 : HITTED, -1 : ERROR
+{     
+    t_tuple *four;
+    double dis;
+
+    four = create_tuple(0, 0, 0, 0);
+    if (!four)
+        return (-1);
+    dis = sphere_calcule(object, ray ,four);
+    if (dis == 1)
+        return (free(four), 1); // SPHERE NOT HITTED
+    else if (dis == -1)
+        return (free(four), -1); // ERROR
+    *t1 = (-four->y - sqrt(four->w)) / (2 * four->x);
+    *t2 = (-four->y + sqrt(four->w)) / (2 * four->x);
+    free(four);
+    return (0);
+}
+t_xs *sphere_intersect(t_object *object, t_ray *ray)
 {
     t_xs *xs;        
     double t1;
     double t2;
     double check;
-    
-    if (!object || !object->shape || !sphere || !ray)
-        return (NULL); // TO DO free all world and exit()
-    check = sphere_helper(sphere, ray, &t1, &t2);
+
+    check = sphere_helper(object, ray, &t1, &t2);
     if (check == -1)
         return (NULL); // TO DO free all world and exit()
     else if (check == 1)
@@ -1684,50 +1694,48 @@ t_xs *sphere_intersect(t_sphere *sphere, t_ray *ray, t_object *object)
         return (NULL); // TO DO free all world and exit()
     return (xs);
 }
-void print_ray(t_ray *ray)
+t_xs *plane_intersect(t_object *object, t_ray *ray)
 {
-    print_type(ray->origin);
-    print_type(ray->direction);
+    t_xs *xs;
+
+    xs = create_intersect(1);
+    if (!xs)
+        return (NULL); // TO DO free all world and exit()
+    if (fabs(ray->direction->y) < EPSILON)
+        return (NULL); // NO EXIT
+    xs->count = 1;
+    xs->inters->object = object;
+    xs->inters->t = -ray->origin->y / ray->direction->y;
+    return (xs);
 }
+t_xs *intersect_object(t_object *object, t_ray *ray)
+{
+    if (object->type == SPHERE)
+        return (sphere_intersect(object, ray));
+    else if (object->type == PLANE)
+        return (plane_intersect(object, ray));
+    return (NULL);
+}
+
 t_xs *intersect(t_object *object, t_ray *ray)
 {
     t_ray *local_ray;
     t_matrix *inverse;
 
-    if (object->type == SPHERE)
-    {
-        inverse = matrix_inverse(object->shape->sphere->transform);
-        local_ray = transform(ray, inverse);
-        free_matrix(inverse); // Free the inverse matrix
-        return (sphere_intersect(object->shape->sphere, ray, object));
-    }
-    else if (object->type == CYLINDER)
-    {
-        inverse = matrix_inverse(object->shape->cylinder->transform);
-        local_ray = transform(ray, inverse);
-        free_matrix(inverse);
-        // return (cylinder_intersect(object->shape->cylinder, local_ray, object)); // TO DO
-    }
-    else if (object->type == PLANE)
-    {
-        inverse = matrix_inverse(object->shape->plane->transform);
-        local_ray = transform(ray, inverse);
-        free_matrix(inverse);
-        // return (plane_intersect(object->shape->plane, local_ray, object)); // TO DO
-    }
-    return (NULL);
+    if (!object || !object->material || !object->shape || !object->transform)
+        return (NULL);
+    inverse = matrix_inverse(object->transform);
+    local_ray = transform(ray, inverse);
+    free_matrix(inverse); // Free the inverse matrix
+    return (intersect_object(object, ray));
+}
+void print_ray(t_ray *ray)
+{
+    print_type(ray->origin);
+    print_type(ray->direction);
 }
 
 int main()
 {
-    t_object *obj;
-    t_matrix *m;
-    
-    obj = create_object(SPHERE);
-    m = scaling(1, 0.5, 1);
-    m = matrix_multiply(m, rotation_z(PI/5), 4);
-    set_transform(&obj, m);
-    t_tuple *n = normal_at(obj, create_point(0, sqrt(2)/2, -sqrt(2)/2));
-    print_type(n);
-    render_sence();
+    render_scene();
 }

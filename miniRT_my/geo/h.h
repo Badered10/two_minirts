@@ -51,18 +51,18 @@ typedef struct s_tuple
 
 typedef struct s_img 
 {
-    void *img;
-    char *addr;
     int bits_per_pixel;
     int line_length;
     int endian;
+    void *img;
+    char *addr;
 } t_img;
 
 typedef struct s_canvas
 {
-    void *mlx;
     int width;
     int height;
+    void *mlx;
     t_img *img;
 } t_canvas;
 
@@ -80,37 +80,31 @@ typedef struct s_ray
 
 typedef struct s_material
 {
-    t_tuple *color;
     double ambient;
     double diffuse;
     double specular;
     double shininess;
+    t_tuple *color;
 } t_material;
 
 typedef struct s_sphere
 {
-    t_tuple *center;
-    t_matrix *transform;
-    t_material *material;
     double r;
+    t_tuple *center;
 } t_sphere;
 
 typedef struct s_plane
 {
     t_tuple *point;
     t_tuple *normal;
-    t_matrix *transform;
-    t_material *material;
 } t_plane;
 
 typedef struct s_cylinder
 {
-    t_tuple *center;
-    t_tuple *axis;
     double radius;
     double height;
-    t_matrix *transform;
-    t_material *material;
+    t_tuple *center;
+    t_tuple *axis;
 } t_cylinder;
 
 typedef union s_shape
@@ -122,8 +116,10 @@ typedef union s_shape
 
 typedef struct s_object
 {
-    t_shape *shape;
     e_type type;
+    t_shape *shape;
+    t_matrix *transform;
+    t_material *material;
 } t_object;
 
 typedef struct s_intersect
@@ -231,7 +227,5 @@ t_tuple *create_color(double x, double y, double z);
 void parse_file(const char *filename, t_world *world, t_camera **cam);
 bool is_shadowed(t_world *world, t_tuple *point);
 t_xs *intersect(t_object *object, t_ray *ray);
-// t_object *create_plane(void);
-// t_object *create_cylinder(void);
-
+t_matrix *identity_matrix(void);
 #endif
