@@ -11,6 +11,10 @@
 #include "get_next_line.h"
 
 
+
+#define WIDTH 200
+#define HEIGHT 100
+
 #ifdef EPSILON
 #undef EPSILON
 #endif
@@ -31,7 +35,7 @@
 
 #define VEC 0
 
-#define EPSILON 1e-7
+#define EPSILON 1e-5
 #define PI      3.1415926
 
 typedef enum s_type

@@ -1,11 +1,11 @@
 NAME			:= minirt
 
-CC				:= cc
+CC				:= cc -fsanitize=address -g3
 CFLAGS			:= 
 # 1 FOR MAC
 # MFLAGS			:= -Lmlx_mac -lmlx -framework OpenGL -framework AppKit #-lX11 -lXext
 # 2 FOR LINUX  
-MFLAGS = -lm   -Lmlx_linux -lmlx_Linux -L/usr/lib -Imlx_linux -lXext -lX11 -lm -lz #-fsanitize=address -g3
+MFLAGS = -lm   -Lmlx_linux -lmlx_Linux -L/usr/lib -Imlx_linux -lXext -lX11 -lm -lz
 
 VEC3			:= vec3/vec3.c
 PARSE			:=	parse/parser.c parse/errs.c parse/garbage.c
