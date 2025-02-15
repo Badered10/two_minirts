@@ -31,8 +31,8 @@
 
 #define VEC 0
 
-#define EPSILON 0.0001
-#define PI 3.141592653589793238
+#define EPSILON 1e-7
+#define PI      3.1415926
 
 typedef enum s_type
 {

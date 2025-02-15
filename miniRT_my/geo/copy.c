@@ -6,7 +6,7 @@
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 17:17:09 by baouragh          #+#    #+#             */
-/*   Updated: 2025/02/14 10:48:35 by baouragh         ###   ########.fr       */
+/*   Updated: 2025/02/15 17:02:22 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1186,7 +1186,7 @@ t_tuple *lighting(t_material *material, t_light *light, t_tuple *point, t_tuple 
     ambient = mul_tuple(effective_color, material->ambient);
 
     if (in_shadow)
-        return ambient;  // Only return ambient when in shadow
+        return (ambient);  // Only return ambient when in shadow
 
     light_dot_normal = dot_tuple(lightv, normalv);
     if (light_dot_normal < 0)
@@ -1512,11 +1512,17 @@ void render_scene(void)
     world->lights_list = ft_lstnew(point_light(create_point(-10, 10, -10), create_color(1, 1, 1)));
 
     // Create Floor
-    t_object *floor = create_object(SPHERE);
-    floor->transform = scaling(10, 0.01, 10);
+    // t_object *floor = create_object(SPHERE);
+    // floor->transform = scaling(10, 0.01, 10);
+    // floor->material = create_material();
+    // floor->material->color = create_color(1, 0.9, 0.9);
+    // floor->material->specular = 0;
+    t_object *floor = create_object(PLANE);
+    floor->transform = identity_matrix();
     floor->material = create_material();
-    floor->material->color = create_color(1, 0.9, 0.9);
+    floor->material->color = create_color(0.5, 0.5, 0.5);
     floor->material->specular = 0;
+    floor->material->diffuse = 0.7;
 
     // Create Left Wall
     t_object *left_wall = create_object(SPHERE);
@@ -1597,17 +1603,21 @@ bool is_shadowed(t_world *world, t_tuple *point)
     t_xs *intersects;
     double distance;
     double h;
+    bool shadowed;
 
     v = sub_tuple(((t_light *)(world->lights_list->content))->position, point);
     distance = len_tuple(v);
     direction = norm_tuple(v);
     r = create_ray(point, direction);
     intersects = intersect_world(world, r);
+    
     h = hit(intersects);
     if (h > 0 && h < distance)
-        return (true);
+        shadowed = true;
     else
-        return (false);
+        shadowed = false;
+    printf("Shadow check at (%f, %f, %f): %s\n", 
+       point->x, point->y, point->z, shadowed ? "IN SHADOW" : "LIT");
 }
 
 void print_material(t_material *m)
@@ -1722,8 +1732,8 @@ t_xs *intersect(t_object *object, t_ray *ray)
     t_ray *local_ray;
     t_matrix *inverse;
 
-    if (!object || !object->material || !object->shape || !object->transform)
-        return (NULL);
+    // if (!object || !object->material || !object->shape || !object->transform)
+    //     return (NULL);
     inverse = matrix_inverse(object->transform);
     local_ray = transform(ray, inverse);
     free_matrix(inverse); // Free the inverse matrix
