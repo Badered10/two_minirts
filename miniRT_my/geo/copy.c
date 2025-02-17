@@ -6,7 +6,7 @@
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 17:17:09 by baouragh          #+#    #+#             */
-/*   Updated: 2025/02/15 17:55:22 by baouragh         ###   ########.fr       */
+/*   Updated: 2025/02/17 13:29:54 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -862,24 +862,28 @@ t_xs *create_intersect(int count)
 void add_intersect(t_xs **xs, t_xs *x)
 {
     t_xs *tmp;
-    int i;
-    int k;
-    int j;
-    int diff;
+    int i, k, j, diff;
 
     if (!xs || !x)
         return;
-    if(!*xs)
+
+    if (!*xs)
         *xs = create_intersect(x->count);
     else
         (*xs)->count += x->count;
+
+    if (!*xs) // Check if allocation failed
+        return;
+
     tmp = create_intersect((*xs)->count);
-    if (!tmp)
-        return ;
+    if (!tmp) 
+        return;
+
     i = 0;
     k = 0;
     j = 0;
     diff = (*xs)->count - x->count;
+
     while (i < diff && j < x->count)
     {
         if ((*xs)->inters[i].t < x->inters[j].t)
@@ -891,10 +895,12 @@ void add_intersect(t_xs **xs, t_xs *x)
         tmp->inters[k++] = (*xs)->inters[i++];
     while (j < x->count)
         tmp->inters[k++] = x->inters[j++];
-    free((*xs)->inters);
+
+    free((*xs)->inters); // Free old memory before reassigning
     (*xs)->inters = tmp->inters;
-    free(tmp);
+    free(tmp); // Avoid use-after-free by NOT freeing tmp->inters
 }
+
 
 t_intersect *intersection(double t, t_object *object)
 {
@@ -1002,6 +1008,7 @@ void print_intersects(t_xs *xs)
         return;
     i = -1;
     tmp = xs->inters;
+    if (xs->count != 1)
     while (++i < xs->count)
         printf("Object : %p, xs.t : %f\n",tmp[i].object ,tmp[i].t);
 }
@@ -1270,13 +1277,16 @@ t_xs *intersect_world(t_world *world, t_ray *ray)
     t_xs *x;
     t_object *object;
     t_list *lst;
-    
+    int i;
+
+    i = 0;
     xs = NULL;
     lst = world->objects_list;
     while (lst)
     {
         x = intersect(lst->content, ray);
         add_intersect(&xs, x);
+        i++;
         lst = lst->next;
     }
     return (xs);
@@ -1322,20 +1332,19 @@ t_tuple *shade_hit(t_world *world, t_comps *comps) // return a color
     i = 0;
     res = create_color(0, 0, 0);
     shadowed = is_shadowed(world, comps->over_point);
-    if (comps->object->type == SPHERE)
+
+    lst = world->lights_list;
+    while (lst)
     {
-        lst = world->lights_list;
-        while (lst)
-        {
-            color = lighting(comps->object->material, world->lights_list->content,
-            comps->point, comps->eyev, comps->normalv, shadowed);
-            new_res = add_tuple(res, color);
-            free(res);
-            free(color);
-            res = new_res;
-            lst = lst->next;
-            i++;
-        }
+        color = lighting(comps->object->material, world->lights_list->content,
+        comps->point, comps->eyev, comps->normalv, shadowed);
+        new_res = add_tuple(res, color);
+        free(res);
+        free(color);
+        res = new_res;
+        lst = lst->next;
+        i++;
+    
     }
     if (i > 0)
     {
@@ -1346,17 +1355,36 @@ t_tuple *shade_hit(t_world *world, t_comps *comps) // return a color
     return (res);
 }
 
+t_intersect *get_first_positive(t_xs *xs)
+{
+    t_intersect *res;
+    int i;
+
+    i = 0;
+    res = NULL;
+    while (i < xs->count)
+    {
+        if (xs->inters[i].t > 0)
+        {
+            res = xs->inters + i;
+            break;
+        }
+        i++;
+    }
+    return (res);
+}
+
 t_tuple *color_at(t_world *w, t_ray *r)
 {
     t_xs *xs;
     t_comps *comps;
-    double inter_value;
+    t_intersect *first_inter;
     
     xs = intersect_world(w, r);
-    inter_value = hit(xs);
-    if (inter_value < 0)
+    first_inter = get_first_positive(xs);
+    if (!first_inter)
         return (create_color(0, 0, 0));
-    comps = prepare_computations(xs->inters, r);
+    comps = prepare_computations(first_inter, r);
     return (shade_hit(w, comps));
 }
 
@@ -1678,9 +1706,10 @@ double sphere_helper(t_object *object, t_ray *ray, double *t1, double *t2) // 1 
     free(four);
     return (0);
 }
+
 t_xs *sphere_intersect(t_object *object, t_ray *ray)
 {
-    t_xs *xs;        
+    t_xs *xs;       
     double t1;
     double t2;
     double check;
@@ -1694,6 +1723,7 @@ t_xs *sphere_intersect(t_object *object, t_ray *ray)
         return (NULL); // TO DO free all world and exit()
     return (xs);
 }
+
 t_xs *plane_intersect(t_object *object, t_ray *ray)
 {
     t_xs *xs;
@@ -1708,6 +1738,7 @@ t_xs *plane_intersect(t_object *object, t_ray *ray)
     xs->inters->t = -ray->origin->y / ray->direction->y;
     return (xs);
 }
+
 t_xs *intersect_object(t_object *object, t_ray *ray)
 {
     if (object->type == SPHERE)
