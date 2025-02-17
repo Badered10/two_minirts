@@ -6,7 +6,7 @@
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 17:17:09 by baouragh          #+#    #+#             */
-/*   Updated: 2025/02/17 13:29:54 by baouragh         ###   ########.fr       */
+/*   Updated: 2025/02/17 15:39:00 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -940,6 +940,19 @@ t_plane *create_plane(void)
     return (plane);
 }
 
+t_cylinder *create_cylinder(void)
+{
+    t_cylinder *cylinder;
+
+    cylinder = malloc(sizeof(t_cylinder));
+    if (!cylinder)
+        return (NULL);
+    cylinder->center = create_point(0, 0, 0);
+    if (!cylinder->center)
+        return (free(cylinder), NULL);
+    return (cylinder);
+}
+
 t_shape *create_shape(e_type type)
 {
     t_shape *shape;
@@ -959,6 +972,12 @@ t_shape *create_shape(e_type type)
         if (!shape)
             return (NULL);
     }
+    else if (type == CYLINDER)
+    {
+        shape->cylinder = create_cylinder();
+        if (!shape)
+            return (NULL);
+    }
     return (shape);
 }
 
@@ -974,6 +993,10 @@ void free_shape(t_object *object)
     else if (object->type == PLANE)
     {
         free(object->shape->plane);
+    }
+    else if (object->type == CYLINDER)
+    {
+        free(object->shape->cylinder);
     }
     free(object->shape);
 }
@@ -1063,12 +1086,19 @@ t_tuple *plane_local_normal_at(void)
     return (create_vector(0, 1, 0));
 }
 
+t_tuple *cylander_local_normal_at(t_tuple *local_point)
+{
+    return (create_vector(local_point->x, 0, local_point->z));
+}
+
 t_tuple *local_normal_at (t_object *object, t_tuple *local_point)
 {
     if (object->type == SPHERE)
         return (sphere_local_normal_at(local_point));
     else if (object->type == PLANE)
         return (plane_local_normal_at());
+    else if (object->type == CYLINDER)
+        return (cylander_local_normal_at(local_point));
     return (NULL);
 }
 
@@ -1541,12 +1571,15 @@ void render_scene(void)
 
     // Create Floor
     t_object *floor = create_object(PLANE);
-    floor->transform = scaling(10, 0.01, 10);
+    floor->transform = matrix_multiply(
+        translation(0, 0, 0),
+        scaling(10, 0.01, 10), 4
+    );
     floor->material = create_material();
     floor->material->color = create_color(1, 0.9, 0.9);
     floor->material->specular = 0;
 
-    // Create Left Wall
+    // // Create Left Wall
     // t_object *left_wall = create_object(SPHERE);
     // left_wall->transform = matrix_multiply(
     //     translation(0, 0, 5),
@@ -1650,16 +1683,18 @@ int prepare_xs(t_xs **xs, t_object *object, double t1, double t2)
     if (!*xs)
         return (-1); // TO DO free all world and exit
     (*xs)->count = 2;
-    if (t1 > t2)
-    {
-        (*xs)->inters[0].t = t2;
-        (*xs)->inters[1].t = t1;
-    }
-    else
-    {
-        (*xs)->inters[0].t = t1;
-        (*xs)->inters[1].t = t2;
-    }
+    (*xs)->inters[0].t = fmin(t1, t2);
+    (*xs)->inters[1].t = fmax(t1, t2);
+    // if (t1 > t2)
+    // {
+    //     (*xs)->inters[0].t = t2;
+    //     (*xs)->inters[1].t = t1;
+    // }
+    // else
+    // {
+    //     (*xs)->inters[0].t = t1;
+    //     (*xs)->inters[1].t = t2;
+    // }
     (*xs)->inters[0].object = object;
     (*xs)->inters[1].object = object;
     return (0);
@@ -1739,12 +1774,39 @@ t_xs *plane_intersect(t_object *object, t_ray *ray)
     return (xs);
 }
 
+t_xs *cylander_intersect(t_object *object, t_ray *ray)
+{
+    t_xs *xs;
+    t_tuple *four;
+    double t1;
+    double t2;
+
+    four = create_tuple(0, 0, 0, 0);
+    if (!four)
+        return (NULL);
+    four->x = (ray->direction->x * ray->direction->x) + (ray->direction->z * ray->direction->z);
+    if (four->x < EPSILON)
+        return (free(four), NULL);
+    four->y = (2 * ray->origin->x * ray->direction->x) + (2 * ray->origin->z * ray->direction->z);
+    four->z = (ray->origin->x * ray->origin->x) + (ray->origin->z * ray->origin->z) - 1;
+    four->w = (four->y * four->y) - (4 * four->x * four->z);
+    if (four->w < 0)
+        return (free(four), NULL);
+    t1 = (-four->y - sqrt(four->w)) / (2 * four->x);
+    t2 = (-four->y + sqrt(four->w)) / (2 * four->x);
+    if (prepare_xs(&xs, object, t1, t2))
+        return (NULL); // TO DO free all world and exit()
+    return (xs);
+}
+
 t_xs *intersect_object(t_object *object, t_ray *ray)
 {
     if (object->type == SPHERE)
         return (sphere_intersect(object, ray));
     else if (object->type == PLANE)
         return (plane_intersect(object, ray));
+    else if (object->type == CYLINDER)
+        return (cylander_intersect(object, ray));
     return (NULL);
 }
 
