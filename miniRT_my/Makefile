@@ -9,13 +9,37 @@ MFLAGS = -lm   -Lmlx_linux -lmlx_Linux -L/usr/lib -Imlx_linux -lXext -lX11 -lm -
 
 VEC3			:= vec3/vec3.c
 PARSE			:=	parse/parser.c parse/errs.c parse/garbage.c
+
+SRC_DIR = /home/baouragh/Desktop/two_minirts/miniRT/src
+ACTIONS	=	$(SRC_DIR)/actions/colors.c
+
+GC	=	$(SRC_DIR)/gc/gc.c
+
+MAP	=	$(SRC_DIR)/map/reader.c \
+		$(SRC_DIR)/map/getter.c \
+		$(SRC_DIR)/map/writer.c \
+		$(SRC_DIR)/map/renderer.c \
+		$(SRC_DIR)/map/renderer.c/ft_c_split.c \
+
+GUARDS = $(SRC_DIR)/guards/light.c	\
+		$(SRC_DIR)/guards/camera.c	\
+		$(SRC_DIR)/guards/sphere.c	\
+		$(SRC_DIR)/guards/plane.c	\
+		$(SRC_DIR)/guards/cylinder.c	\
+		$(SRC_DIR)/guards/utils.c	\
+		$(SRC_DIR)/guards/point.c	\
+		$(SRC_DIR)/guards/colors.c	\
+		$(SRC_DIR)/guards/filter.c	\
+
+ERROR	=	$(SRC_DIR)/error/error.c
+
 # RAYTRCING		:=	raytracing/raytracing.c
 # COLOR			:=	color/color.c
 # RAY				:=	ray/ray.c
 GEO				:=  geo/copy.c  geo/get_next_line.c geo/get_next_line_utils.c
 # GNL				:=	gnl/get_next_line.c gnl/get_next_line_utils.c
 
-SRCS 			:= $(GNL) $(PARSE) $(GEO) $(VEC3)
+SRCS 			:= $(GNL) $(PARSE) $(GEO) $(VEC3) $(ACTIONS) $(GC) $(GUARDS) $(MAP) $(ERROR)
 				
 LIBFT_PATH		:=	libft/
 LIBFT			:=	libft/libft.a

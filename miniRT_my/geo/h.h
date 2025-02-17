@@ -126,6 +126,12 @@ typedef struct s_object
     t_material *material;
 } t_object;
 
+typedef struct s_ambient
+{
+    double lighting_ratio;
+    t_tuple *color;
+} t_ambient;
+
 typedef struct s_intersect
 {
     t_object *object;
@@ -144,12 +150,23 @@ typedef struct s_light
     t_tuple *intensity;
 } t_light;
 
+typedef struct s_camera
+{
+    double hsize;
+    double vsize;
+    double field_of_view;
+    double half_width;
+    double half_height;
+    double pixel_size;
+    t_matrix *transform;
+} t_camera;
+
 typedef struct s_world
 {
+    t_camera *camera;
     t_list *lights_list;
     t_list *objects_list;
-    double ambient_light;
-    t_tuple *ambient_color;
+    t_list *ambient_list;
 } t_world;
 
 typedef struct s_comps
@@ -163,16 +180,6 @@ typedef struct s_comps
     t_tuple *over_point;
 } t_comps;
 
-typedef struct s_camera
-{
-    double hsize;
-    double vsize;
-    double field_of_view;
-    double half_width;
-    double half_height;
-    double pixel_size;
-    t_matrix *transform;
-} t_camera;
 
 typedef struct projectile
 {
@@ -228,7 +235,6 @@ t_matrix *view_transform(t_tuple *from, t_tuple *to, t_tuple *up);
 t_object *create_object(e_type type);
 t_sphere *create_sphere(void);
 t_tuple *create_color(double x, double y, double z);
-void parse_file(const char *filename, t_world *world, t_camera **cam);
 bool is_shadowed(t_world *world, t_tuple *point);
 t_xs *intersect(t_object *object, t_ray *ray);
 t_matrix *identity_matrix(void);

@@ -6,7 +6,7 @@
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 17:17:09 by baouragh          #+#    #+#             */
-/*   Updated: 2025/02/05 17:21:12 by baouragh         ###   ########.fr       */
+/*   Updated: 2025/02/17 16:45:22 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -849,7 +849,7 @@ t_intersect *create_intersect(t_list **garbge)
 t_intersect *intersect(t_object *object, t_ray *ray, t_list **garbge)
 {
     t_intersect *intr;        
-    t_tuple *sphere_to_ray;
+    t_tuple *t_sphereo_ray;
     t_ray *ray2;
     double a;
     double b;
@@ -860,10 +860,10 @@ t_intersect *intersect(t_object *object, t_ray *ray, t_list **garbge)
         return (NULL);
     ray2 = transform(ray, matrix_inverse(object->shape->sphere->transform, garbge), garbge);
     intr = create_intersect(garbge);
-    sphere_to_ray = sub_tuple(ray2->origin, object->shape->sphere->center, garbge);
+    t_sphereo_ray = sub_tuple(ray2->origin, object->shape->sphere->center, garbge);
     a = dot_tuple(ray2->direction, ray2->direction);
-    b = 2 * dot_tuple(ray2->direction, sphere_to_ray);
-    c = dot_tuple(sphere_to_ray, sphere_to_ray) - 1;
+    b = 2 * dot_tuple(ray2->direction, t_sphereo_ray);
+    c = dot_tuple(t_sphereo_ray, t_sphereo_ray) - 1;
     discriminant = b * b - 4 * a * c;
     if (discriminant < 0)
         return (intr);

@@ -6,7 +6,7 @@
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 17:17:09 by baouragh          #+#    #+#             */
-/*   Updated: 2025/02/17 15:39:00 by baouragh         ###   ########.fr       */
+/*   Updated: 2025/02/17 17:18:06 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1703,7 +1703,7 @@ int sphere_calcule(t_object *object, t_ray *ray ,t_tuple *four)
 {
     t_matrix *inverse;
     t_ray *ray2;
-    t_tuple *sphere_to_ray;
+    t_tuple *t_sphereo_ray;
 
     inverse = matrix_inverse(object->transform);
     if (!inverse)
@@ -1711,16 +1711,16 @@ int sphere_calcule(t_object *object, t_ray *ray ,t_tuple *four)
     ray2 = transform(ray, inverse);
     if (!ray2)
         return (free_matrix(inverse), -1);
-    sphere_to_ray = sub_tuple(ray2->origin, object->shape->sphere->center);
-    if (!sphere_to_ray)
+    t_sphereo_ray = sub_tuple(ray2->origin, object->shape->sphere->center);
+    if (!t_sphereo_ray)
         return (free_ray(ray2), free_matrix(inverse), -1);
     four->x = dot_tuple(ray2->direction, ray2->direction);
-    four->y = 2 * dot_tuple(ray2->direction, sphere_to_ray);
-    four->z = dot_tuple(sphere_to_ray, sphere_to_ray) - 1;
+    four->y = 2 * dot_tuple(ray2->direction, t_sphereo_ray);
+    four->z = dot_tuple(t_sphereo_ray, t_sphereo_ray) - 1;
     four->w = (four->y * four->y) - (4 * four->x * four->z);
     if (four->w < 0)
-        return (free(sphere_to_ray), free_ray(ray2), free_matrix(inverse), 1);
-    return (free(sphere_to_ray), free_ray(ray2), free_matrix(inverse), 0);
+        return (free(t_sphereo_ray), free_ray(ray2), free_matrix(inverse), 1);
+    return (free(t_sphereo_ray), free_ray(ray2), free_matrix(inverse), 0);
 }
 
 double sphere_helper(t_object *object, t_ray *ray, double *t1, double *t2) // 1 : NOT HITTED, 0 : HITTED, -1 : ERROR
