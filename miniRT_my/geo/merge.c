@@ -6,7 +6,7 @@
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 17:17:09 by baouragh          #+#    #+#             */
-/*   Updated: 2025/02/19 17:18:12 by baouragh         ###   ########.fr       */
+/*   Updated: 2025/02/19 18:56:20 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1869,6 +1869,8 @@ void print_map_data(void)
     {
         print_type(((t_light *)lights_list->content)->position);
         print_type(((t_light *)lights_list->content)->color);
+        printf("%f\n", ((t_light *)lights_list->content)->brightness);
+        
         lights_list = lights_list->next;
     }
     printf("OBJECTS\n");
@@ -1884,6 +1886,14 @@ void print_map_data(void)
         else if (object->type == PLANE)
         {
             printf("PLANE\n");
+            /*
+                t_tuple   *pos; // center
+                t_tuple   *normal; // [-1, 1] [-1, 1] [-1, 1]
+                t_tuple   *color;
+            */
+            print_type(object->shape->plane->pos);
+            print_type(object->shape->plane->normal);
+            
         }
         else if (object->type == CYLINDER)
         {
