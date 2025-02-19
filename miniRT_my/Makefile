@@ -19,7 +19,7 @@ MAP	=	$(SRC_DIR)/map/reader.c \
 		$(SRC_DIR)/map/getter.c \
 		$(SRC_DIR)/map/writer.c \
 		$(SRC_DIR)/map/renderer.c \
-		$(SRC_DIR)/map/renderer.c/ft_c_split.c \
+		$(SRC_DIR)/map/ft_c_split.c \
 
 GUARDS = $(SRC_DIR)/guards/light.c	\
 		$(SRC_DIR)/guards/camera.c	\
@@ -36,7 +36,7 @@ ERROR	=	$(SRC_DIR)/error/error.c
 # RAYTRCING		:=	raytracing/raytracing.c
 # COLOR			:=	color/color.c
 # RAY				:=	ray/ray.c
-GEO				:=  geo/copy.c  geo/get_next_line.c geo/get_next_line_utils.c
+GEO				:=    geo/get_next_line.c geo/get_next_line_utils.c geo/merge.c #geo/copy.c
 # GNL				:=	gnl/get_next_line.c gnl/get_next_line_utils.c
 
 SRCS 			:= $(GNL) $(PARSE) $(GEO) $(VEC3) $(ACTIONS) $(GC) $(GUARDS) $(MAP) $(ERROR)

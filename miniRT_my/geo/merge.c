@@ -1,19 +1,21 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   copy.c                                             :+:      :+:    :+:   */
+/*   merge.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 17:17:09 by baouragh          #+#    #+#             */
-/*   Updated: 2025/02/19 13:02:25 by baouragh         ###   ########.fr       */
+/*   Updated: 2025/02/19 17:18:12 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../libft/libft.h"
+// #include "../libft/libft.h"
 // #include "h.h"
 #include "/home/baouragh/Desktop/two_minirts/miniRT/src/../includes/main.h"
 
+#define WIDTH 200
+#define HEIGHT 100
 // DEBUG FUNCTION-------------------------------------------------------------------------------
 void print_type(t_tuple *tuple)
 {
@@ -655,7 +657,7 @@ t_matrix *matrix_inverse(t_matrix *matrix)
     int row;
     int col;
 
-    if (!matrix || !matrix->data || !matrix_invertiblity(matrix))
+    if (!matrix || !matrix->data)
         return (NULL);
     inverse = create_matrix(matrix->size, matrix->size, NULL);
     if (!inverse)
@@ -924,10 +926,10 @@ t_sphere *create_sphere(void)
     sphere = malloc(sizeof(t_sphere));
     if (!sphere)
         return (NULL);
-    sphere->center = create_point(0, 0, 0);
-    if (!sphere->center)
+    sphere->pos = create_point(0, 0, 0);
+    if (!sphere->pos)
         return (free(sphere), NULL);
-    sphere->r = 1;
+    sphere->diameter = 1 / 2;
     return (sphere);
 }
 
@@ -988,7 +990,7 @@ void free_shape(t_object *object)
         return;
     if (object->type == SPHERE)
     {
-        free(object->shape->sphere->center);
+        free(object->shape->sphere->pos);
         free(object->shape->sphere);
     }
     else if (object->type == PLANE)
@@ -1163,17 +1165,19 @@ t_tuple *reflect(t_tuple *in, t_tuple *normal)
     return (sub);
 }
 
-t_light *point_light(t_tuple *position, t_tuple *intensity)
+t_light *point_light(double brightness, t_tuple *position, t_tuple *color)
 {
     t_light *light;
 
-    if (!position || !intensity)
-        return (NULL);
     light = malloc(sizeof(t_light));
     if (!light)
         return (NULL);
+    light->brightness = brightness;
     light->position = position;
-    light->intensity = intensity;
+    light->color = color;
+    light->intensity = mul_tuple(color, brightness);
+    if (!light->intensity)
+        return (free(light), NULL);
     return (light);
 }
 
@@ -1203,6 +1207,7 @@ void set_color_material(t_material *m, t_tuple *color)
 }
 
 // TESTS
+
 t_tuple *lighting(t_material *material, t_light *light, t_tuple *point, t_tuple *eyev, t_tuple *normalv, bool in_shadow)
 {
     t_tuple *res;
@@ -1217,6 +1222,9 @@ t_tuple *lighting(t_material *material, t_light *light, t_tuple *point, t_tuple 
     double reflect_dot_eye;
     double factor;
 
+    // print adresees
+    // printf("material clr : %p , light int %p\n", material->color, light->intensity);
+    // exit(1);
     effective_color = hadamard_product(material->color, light->intensity);
     lightv = norm_tuple(sub_tuple(light->position, point));
 
@@ -1284,7 +1292,7 @@ t_world *default_world(void)
         return (NULL);
     point = create_point(-10, 10, -10);
     color = create_color(1, 1, 1);
-    light = point_light(point, color);
+    light = point_light(0.6 ,point, color);
     object1 = create_object(SPHERE);
     c = create_color(0.8, 1.0, 0.6);
     set_color_material(object1->material, c);
@@ -1499,24 +1507,24 @@ t_camera *create_camera(int hsize, int vsize, double field_of_view_rad)
     cam->vsize = vsize;
     cam->transform = identity_matrix();
     pixel_size_cal(cam);
+    cam->pos = create_point(0, 0, 0);
+    cam->direction = create_vector(0, 0, 0);
     return (cam);
 }
-t_ray *ray_for_pixel(t_camera *cam, int px, int py)
+t_ray *ray_for_pixel(t_camera *cam, t_matrix *inverse, t_tuple *origin, int px, int py)
 {
     double xoffset; 
     double yoffset;
     double world_x;
     double world_y;
     t_tuple *pixel;
-    t_tuple *origin;
     t_tuple *direction; 
     
     xoffset = (px + 0.5) * cam->pixel_size;
     yoffset = (py + 0.5) * cam->pixel_size;
     world_x = cam->half_width - xoffset;
     world_y = cam->half_height - yoffset;
-    pixel = matrix_tuple_mul4x4(matrix_inverse(cam->transform), create_point(world_x, world_y, -1));
-    origin = matrix_tuple_mul4x4(matrix_inverse(cam->transform), create_point(0 ,0 ,0));
+    pixel = matrix_tuple_mul4x4(inverse, create_point(world_x, world_y, -1));
     direction = norm_tuple(sub_tuple(pixel, origin));
     return (create_ray(origin, direction));
 }
@@ -1526,9 +1534,15 @@ t_ray *ray_for_pixel(t_camera *cam, int px, int py)
     t_canvas *image;
     t_tuple *color;
     t_ray *ray;
+    t_tuple *origin;
+    t_matrix *inverse;
+
     int x;
     int y;
-
+    inverse = matrix_inverse(cam->transform);
+    if (!matrix_invertiblity(cam->transform))
+        printf("NOT AN ERROR ,BUT YOU MAY NOT SEE A THING !\n");
+    origin = matrix_tuple_mul4x4(inverse, create_point(0 ,0 ,0));
     image = create_canvas(cam->hsize, cam->vsize, mlx);
     y = 0;
     while(y < cam->vsize - 1)
@@ -1536,10 +1550,10 @@ t_ray *ray_for_pixel(t_camera *cam, int px, int py)
         x = 0;
         while (x < cam->hsize - 1)
         {
-            ray = ray_for_pixel(cam , x, y);
+            ray = ray_for_pixel(cam ,inverse, origin,x, y);
             color = color_at(world, ray);
             write_pixel(image, x, y, color);
-            mlx_pixel_put(mlx, win, x, y, color_to_int(color));
+            // mlx_pixel_put(mlx, win, x, y, color_to_int(color));
             x++;
         }
         y++;
@@ -1563,12 +1577,12 @@ void render_scene(void)
     win = mlx_new_window(mlx, WIDTH, HEIGHT, "miniRT");
 
     // Create Camera
-    cam = create_camera(WIDTH, HEIGHT, PI / 3);
-    cam->transform = view_transform(create_point(0, 1.5, -5), create_point(0, 1, 0), create_vector(0, 1, 0));
+    cam = create_camera(WIDTH, HEIGHT, M_PI/ 3);
+    cam->transform = view_transform(create_point(0, 15, -20), create_point(0, 1, 0), create_vector(0, 1, 0));
 
     // Create World
     world = create_world();
-    world->lights_list = ft_lstnew(point_light(create_point(-10, 10, -10), create_color(1, 1, 1)));
+    world->lights_list = ft_lstnew(point_light(0.5, create_point(-10, 10, -10), create_color(1, 1, 1)));
 
     // Create Floor
     t_object *floor = create_object(PLANE);
@@ -1585,9 +1599,9 @@ void render_scene(void)
     // left_wall->transform = matrix_multiply(
     //     translation(0, 0, 5),
     //     matrix_multiply(
-    //         rotation_y(-PI / 4),
+    //         rotation_y(-M_PI/ 4),
     //         matrix_multiply(
-    //             rotation_x(PI / 2),
+    //             rotation_x(M_PI/ 2),
     //             scaling(10, 0.01, 10), 4
     //         ), 4
     //     ), 4
@@ -1598,54 +1612,54 @@ void render_scene(void)
     // t_object *right_wall = create_object(SPHERE);
     // right_wall->transform = 
     //  matrix_multiply (translation(0, 0, 5),
-    //  matrix_multiply(rotation_y(PI / 4), 
-    //  matrix_multiply(rotation_x(PI / 2),scaling(10, 0.01, 10), 4), 4), 4 );
+    //  matrix_multiply(rotation_y(M_PI/ 4), 
+    //  matrix_multiply(rotation_x(M_PI/ 2),scaling(10, 0.01, 10), 4), 4), 4 );
     // right_wall->material = floor->material;
 
     // Create Middle Sphere
-    t_object *middle = create_object(SPHERE);
-    middle->transform = translation(-0.5, 1, 0.5);
-    middle->material = create_material();
-    middle->material->color = create_color(0.1, 1, 0.5);
-    middle->material->diffuse = 0.7;
-    middle->material->specular = 0.3;
+    // t_object *middle = create_object(CYLINDER);
+    // middle->transform = translation(-0.5, 1, 0.5);
+    // middle->material = create_material();
+    // middle->material->color = create_color(0.1, 1, 0.5);
+    // middle->material->diffuse = 0.7;
+    // middle->material->specular = 0.3;
 
-    // Create Right Sphere
-    t_object *right = create_object(SPHERE);
-    right->transform = matrix_multiply(
-        translation(1.5, 0.5, -0.5),
-        scaling(0.5, 0.5, 0.5), 4
-    );
-    right->material = create_material();
-    right->material->color = create_color(0.5, 1, 0.1);
-    right->material->diffuse = 0.7;
-    right->material->specular = 0.3;
+    // // Create Right Sphere
+    // t_object *right = create_object(SPHERE);
+    // right->transform = matrix_multiply(
+    //     translation(1.5, 0.5, -0.5),
+    //     scaling(0.5, 0.5, 0.5), 4
+    // );
+    // right->material = create_material();
+    // right->material->color = create_color(0.5, 1, 0.1);
+    // right->material->diffuse = 0.7;
+    // right->material->specular = 0.3;
 
-    // Create Left Sphere
-    t_object *left = create_object(SPHERE);
-    left->transform = matrix_multiply(
-        translation(-1.5, 0.33, -0.75),
-        scaling(0.33, 0.33, 0.33), 4
-    );
-    left->material = create_material();
-    left->material->color = create_color(1, 0.8, 0.1);
-    left->material->diffuse = 0.7;
-    left->material->specular = 0.3;
+    // // Create Left Sphere
+    // t_object *left = create_object(SPHERE);
+    // left->transform = matrix_multiply(
+    //     translation(-1.5, 0.33, -0.75),
+    //     scaling(0.33, 0.33, 0.33), 4
+    // );
+    // left->material = create_material();
+    // left->material->color = create_color(1, 0.8, 0.1);
+    // left->material->diffuse = 0.7;
+    // left->material->specular = 0.3;
 
-    // Add objects to the world
-    t_list *objects = NULL;
-    ft_lstadd_front(&objects, ft_lstnew(floor));
-    // ft_lstadd_front(&objects, ft_lstnew(left_wall));
-    // ft_lstadd_front(&objects, ft_lstnew(right_wall));
-    ft_lstadd_front(&objects, ft_lstnew(middle));
-    ft_lstadd_front(&objects, ft_lstnew(right));
-    ft_lstadd_front(&objects, ft_lstnew(left));
-    world->objects_list = objects;
+    // // Add objects to the world
+    // t_list *objects = NULL;
+    // ft_lstadd_front(&objects, ft_lstnew(floor));
+    // // ft_lstadd_front(&objects, ft_lstnew(left_wall));
+    // // ft_lstadd_front(&objects, ft_lstnew(right_wall));
+    // ft_lstadd_front(&objects, ft_lstnew(middle));
+    // ft_lstadd_front(&objects, ft_lstnew(right));
+    // ft_lstadd_front(&objects, ft_lstnew(left));
+    // world->objects_list = objects;
 
     // Render the scene
-    can = render(cam, world, mlx, win);
-    printf("Rendering done\n");
+    can = render(scene()->camera, scene(), mlx, win);
     mlx_put_image_to_window(mlx, win, can->img->img, 0, 0);
+    printf("Rendering done\n");
     mlx_loop(mlx);
 }
 
@@ -1712,7 +1726,7 @@ int sphere_calcule(t_object *object, t_ray *ray ,t_tuple *four)
     ray2 = transform(ray, inverse);
     if (!ray2)
         return (free_matrix(inverse), -1);
-    t_sphereo_ray = sub_tuple(ray2->origin, object->shape->sphere->center);
+    t_sphereo_ray = sub_tuple(ray2->origin, object->shape->sphere->pos);
     if (!t_sphereo_ray)
         return (free_ray(ray2), free_matrix(inverse), -1);
     four->x = dot_tuple(ray2->direction, ray2->direction);
@@ -1829,8 +1843,70 @@ void print_ray(t_ray *ray)
     print_type(ray->direction);
 }
 
+void print_map_data(void)
+{
+    /*
+        t_camera                *camera;
+        t_list                  *lights_list;
+        t_list                  *objects_list;
+        t_list                  *ambient_list;
+    */
+    t_list *lights_list;
+    t_list *objects_list;
+    t_list *ambient_list;
+    t_object *object;
+    t_world *world = scene();
+    
+    lights_list = world->lights_list;
+    objects_list = world->objects_list;
+    ambient_list = world->ambient_list;
+    printf("CAMERA\n");
+    print_type(world->camera->pos);
+    print_type(world->camera->direction);
+    printf("%f\n", world->camera->field_of_view);
+    printf("LIGHTS\n");
+    while (lights_list)
+    {
+        print_type(((t_light *)lights_list->content)->position);
+        print_type(((t_light *)lights_list->content)->color);
+        lights_list = lights_list->next;
+    }
+    printf("OBJECTS\n");
+    while (objects_list)
+    {
+        object = objects_list->content;
+        if (object->type == SPHERE)
+        {
+            printf("SPHERE\n");
+            print_type(object->shape->sphere->pos);
+            printf("Diameter : %f\n", object->shape->sphere->diameter);
+        }
+        else if (object->type == PLANE)
+        {
+            printf("PLANE\n");
+        }
+        else if (object->type == CYLINDER)
+        {
+            printf("CYLINDER\n");
+            print_type(object->shape->cylinder->center);
+        }
+        print_material(object->material);
+        objects_list = objects_list->next;
+    }
+    printf("AMBIENT\n");
+    while (ambient_list)
+    {
+        print_type(((t_ambient *)ambient_list->content)->color);
+        printf("%f\n", ((t_ambient *)ambient_list->content)->lighting_ratio);
+        ambient_list = ambient_list->next;
+    }
+    
+    
+}
+
 int main(int ac, char **av)
 {
     read_map_data(av[1]);
+    print_map_data();
     render_scene();
 }

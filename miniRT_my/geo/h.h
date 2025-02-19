@@ -9,11 +9,13 @@
 #include <string.h>
 #include "../libft/libft.h"
 #include "get_next_line.h"
+// #include "/home/baouragh/Desktop/two_minirts/miniRT/includes/main.h"
 
 
 
-#define WIDTH 200
-#define HEIGHT 100
+
+#define WIDTH 500
+#define HEIGHT 250
 
 #ifdef EPSILON
 #undef EPSILON
