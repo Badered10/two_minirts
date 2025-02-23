@@ -9,23 +9,25 @@
  * height: 21.42 [0, inf]
  * color: 10,0,255
  */
-cylinder_t
+t_object
 *cylander_guard(char **split, int line)
 {
-    cylinder_t *res;
+    t_object *res;
 
     if (split_len(split) != 6)
         throw_error("Invalid cylinder arguments at line: ", line, NULL);
 
-    res = new_(sizeof(cylinder_t));
+    res = create_object(CYLINDER);
+    if (!res)
+        return (NULL);
 
-    res->pos = point_guard(split[1], line);
-    res->normal = point_guard(split[2], line);
-    res->diameter = double_guard(split[3], line, 0, DOUBLE_MAX);
-    res->height = double_guard(split[4], line, 0, DOUBLE_MAX);
-    res->color = color_guard(split[5], line);
+    res->shape->cylinder->center = point_guard(split[1], line);
+    res->shape->cylinder->normal = point_guard(split[2], line);
+    res->shape->cylinder->diameter = double_guard(split[3], line, 0, DOUBLE_MAX);
+    res->shape->cylinder->height = double_guard(split[4], line, 0, DOUBLE_MAX);
+    res->material->color = color_guard(split[5], line);
 
-    res->next = NULL;
+    // res->shape->cylinder->next = NULL;
 
     // if (DEBUG)
     // {
@@ -37,6 +39,7 @@ cylinder_t
     //     printf("\tcolor: %d, %d, %d\n", res->color.r, res->color.g, res->color.b);
     // }
 
-    insert_cylinder(res);
+    // insert_cylinder(res);
+    ft_lstadd_front(&scene()->objects_list, ft_lstnew(res));
     return (res);
 }

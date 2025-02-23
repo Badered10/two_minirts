@@ -1,8 +1,8 @@
 #include "../../includes/tools.h"
 
-// color_t extract_color(char *line)
+// t_tupleextract_color(char *line)
 // {
-//     color_t color;
+//     t_tuplecolor;
 
 
 // }

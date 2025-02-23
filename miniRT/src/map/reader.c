@@ -50,7 +50,7 @@ void    process_line(char *line, int line_count)
     if (ft_strlen(line) == 0)
         return (throw_error("Empty line: ", line_count, NULL));
 
-    split = ft_split(line, " \t");
+    split = ft_c_split(line, " \t");
     if (!split)
         throw_error("Invalid line: ", line_count, NULL);
 
@@ -63,6 +63,30 @@ void    process_line(char *line, int line_count)
 /**
  * this function will read line by line
  */
+
+// void add_ambient_to_objects(void)
+// {
+//     t_ambient *ambient;
+//     t_object *object;
+//     t_list *ambient_list;
+//     t_list *object_list;
+
+//     object_list = scene()->objects_list;
+//     ambient_list = scene()->ambient_list;
+//     while (object_list)
+//     {
+//         object = object_list->content;
+//         while (ambient_list)
+//         {
+//             ambient = ambient_list->content;
+//             object->material->ambient = ambient->lighting_ratio;
+//             // object->material->color = ambient->color;
+//             ambient_list = ambient_list->next;
+//         }
+//         object_list = object_list->next;
+//     }
+// }
+
 void read_map_data(char *filename)
 {
     int     fd;
@@ -85,4 +109,8 @@ void read_map_data(char *filename)
         line = get_next_line(fd);
         line_count++;
     }
+    // add_ambient_to_objects();
+    scene()->ambient_count = ft_lstsize(scene()->ambient_list);
+    scene()->light_count = ft_lstsize(scene()->lights_list);
+    close(fd);
 }

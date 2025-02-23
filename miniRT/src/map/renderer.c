@@ -1,15 +1,21 @@
 #include "../../includes/main.h"
 
-void    render()
+void    to_render()
 {
-    sphere_t    *sphere;
+    t_list    *object;
 
     // sphers check
-    sphere = scene()->sphere_list;
-    while (sphere)
+    object = scene()->objects_list;
+    while (object)
     {
-        if (is_in_fov(&sphere->pos))
-            printf("Sphere-> {%f, %f, %f} will be rendered\n", sphere->pos.x, sphere->pos.y, sphere->pos.z);
-        sphere = sphere->next;
+        if (((t_object *)(object->content))->type == SPHERE)
+        {
+            if (is_in_fov(((t_object *)(object->content))->shape->sphere->pos)) // for sphere
+                printf("Sphere-> {%f, %f, %f} will be rendered\n", (((t_object *)(object->content))->shape->sphere->pos)->x
+                , (((t_object *)(object->content))->shape->sphere->pos)->y, 
+                (((t_object *)(object->content))->shape->sphere->pos)->z);
+        }
+           object = object->next;
+            
     }
 }

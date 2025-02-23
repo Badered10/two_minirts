@@ -1,15 +1,16 @@
 #include "../../includes/main.h"
 
-color_t color_guard(char *color, int line)
+t_tuple *color_guard(char *color, int line)
 {
     char    **color_idents;
     int     color_value;
     int     i;
-    color_t color_return;
+    t_tuple *color_return;
 
-    color_idents = ft_split(color, ",");
+    color_idents = ft_c_split(color, ",");
     i = 0;
-    ft_bzero(&color_return, sizeof(color_t));
+    // ft_bzero(&color_return, sizeof(t_tuple));
+    color_return = create_color(0, 0, 0);
     while (color_idents[i])
     {
         if (i > 2)
@@ -18,11 +19,11 @@ color_t color_guard(char *color, int line)
         if (color_value > 255 || color_value < 0)
             throw_error("Invalid color value [0, 255] in line: ", line, color_idents[i]);
         if (i == 0)
-            color_return.r = color_value;
+            color_return->x = color_value / 255.0;
         if (i == 1)
-            color_return.g = color_value;
+            color_return->y = color_value / 255.0;
         if (i == 2)
-            color_return.b = color_value;
+            color_return->z = color_value / 255.0;
         i++;
     }
     return color_return;

@@ -65,6 +65,14 @@
     "libft.h": "c",
     "minirt.h": "c",
     "unistd.h": "c",
-    "string.h": "c"
+    "string.h": "c",
+    "guards.h": "c",
+    "tools.h": "c",
+    "libs.h": "c",
+    "stdlib.h": "c",
+    "optional": "c",
+    "fcntl.h": "c",
+    "gc.h": "c",
+    "error.h": "c"
   }
 }

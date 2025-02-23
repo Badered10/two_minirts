@@ -1,18 +1,30 @@
 #include "../../includes/main.h"
 
-scene_t *scene()
+t_world *scene()
 {
-    static scene_t scene_;
-    return (&scene_);
+    static t_world *scene_ = NULL;
+
+    if (!scene_)
+    {
+        scene_ = (t_world *)malloc(sizeof(t_world));
+        if (!scene_)
+            return (NULL);
+        scene_->camera = NULL;
+        scene_->lights_list = NULL;
+        scene_->objects_list = NULL;
+        scene_->ambient_list = NULL;
+
+    }
+    return (scene_);
 }
+
 
 void print_scene_data()
 {
-    for (light_t *light_list = scene()->light_list; light_list; light_list = light_list->next)
-    {
-        printf(YELLOW"Light: \n"RESET);
-        printf("\tpos: %f, %f, %f\n", light_list->pos.x, light_list->pos.y, light_list->pos.z);
-        printf("\tbrightness: %f\n", light_list->brightness);
-        printf("\tcolor: %d, %d, %d\n", light_list->color.r, light_list->color.g, light_list->color.b);
-    }
+    t_world *world = scene();
+
+    printf("Camera: %p\n", world->camera);
+    printf("Lights: %p\n", world->lights_list);
+    printf("Objects: %p\n", world->objects_list);
+    printf("Ambient: %p\n", world->ambient_list);
 }

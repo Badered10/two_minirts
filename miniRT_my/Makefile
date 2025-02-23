@@ -1,6 +1,6 @@
 NAME			:= minirt
 
-CC				:= cc -fsanitize=address -g3
+CC				:= cc #-fsanitize=address -g3
 CFLAGS			:= 
 # 1 FOR MAC
 # MFLAGS			:= -Lmlx_mac -lmlx -framework OpenGL -framework AppKit #-lX11 -lXext

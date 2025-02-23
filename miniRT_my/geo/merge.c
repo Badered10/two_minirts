@@ -6,7 +6,7 @@
 /*   By: baouragh <baouragh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 17:17:09 by baouragh          #+#    #+#             */
-/*   Updated: 2025/02/19 18:56:20 by baouragh         ###   ########.fr       */
+/*   Updated: 2025/02/20 16:28:53 by baouragh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,8 +14,8 @@
 // #include "h.h"
 #include "/home/baouragh/Desktop/two_minirts/miniRT/src/../includes/main.h"
 
-#define WIDTH 200
-#define HEIGHT 100
+#define WIDTH 720
+#define HEIGHT 360
 // DEBUG FUNCTION-------------------------------------------------------------------------------
 void print_type(t_tuple *tuple)
 {
@@ -1188,7 +1188,7 @@ t_material *create_material(void)
     mat = malloc(sizeof(t_material));
     if (!mat)
         return (NULL);
-    mat->color = create_color(1, 1, 1); // from file
+    mat->color = create_color(0, 0, 0); 
     if (!mat->color)
         return (free(mat), NULL);
     mat->ambient = 0.1; // from file
@@ -1358,6 +1358,24 @@ t_comps *prepare_computations(t_intersect *x, t_ray *ray)
     return(comps);
 }
 
+t_tuple *add_ambeints(void)
+{
+    t_tuple *res;
+    t_list *ambent_list;
+    t_ambient *ambent;
+
+    res = create_color(0, 0, 0);
+    ambent_list = scene()->ambient_list;
+    while (ambent_list)
+    {
+        ambent = ambent_list->content;
+        // ambient have a color and ratio
+        res = add_tuple(res, mul_tuple(ambent->color, ambent->lighting_ratio));
+        ambent_list = ambent_list->next;
+    }
+    return (res);
+}
+
 t_tuple *shade_hit(t_world *world, t_comps *comps) // return a color
 {
     t_tuple *color;
@@ -1366,12 +1384,11 @@ t_tuple *shade_hit(t_world *world, t_comps *comps) // return a color
     t_tuple *n_res;
     t_list *lst;
     bool shadowed;
-    int i;
-    
-    i = 0;
-    res = create_color(0, 0, 0);
-    shadowed = is_shadowed(world, comps->over_point);
 
+    res = add_ambeints();
+    if (!world->lights_list)
+        return (res);
+    shadowed = is_shadowed(world, comps->over_point);
     lst = world->lights_list;
     while (lst)
     {
@@ -1382,12 +1399,11 @@ t_tuple *shade_hit(t_world *world, t_comps *comps) // return a color
         free(color);
         res = new_res;
         lst = lst->next;
-        i++;
-    
+              
     }
-    if (i > 0)
+    if (scene()->light_count > 0)
     {
-        n_res = mul_tuple(res, 1.0 / i);
+        n_res = mul_tuple(res, 1.0 / scene()->light_count);
         free(res);
         res = n_res;
     }
@@ -1617,53 +1633,52 @@ void render_scene(void)
     // right_wall->material = floor->material;
 
     // Create Middle Sphere
-    // t_object *middle = create_object(CYLINDER);
-    // middle->transform = translation(-0.5, 1, 0.5);
-    // middle->material = create_material();
-    // middle->material->color = create_color(0.1, 1, 0.5);
-    // middle->material->diffuse = 0.7;
-    // middle->material->specular = 0.3;
+    t_object *middle = create_object(SPHERE);
+    middle->transform = translation(-0.5, 1, 0.5);
+    middle->material = create_material();
+    middle->material->color = create_color(0.1, 1, 0.5);
+    middle->material->diffuse = 0.7;
+    middle->material->specular = 0.3;
 
     // // Create Right Sphere
-    // t_object *right = create_object(SPHERE);
-    // right->transform = matrix_multiply(
-    //     translation(1.5, 0.5, -0.5),
-    //     scaling(0.5, 0.5, 0.5), 4
-    // );
-    // right->material = create_material();
-    // right->material->color = create_color(0.5, 1, 0.1);
-    // right->material->diffuse = 0.7;
-    // right->material->specular = 0.3;
+    t_object *right = create_object(SPHERE);
+    right->transform = matrix_multiply(
+        translation(1.5, 0.5, -0.5),
+        scaling(0.5, 0.5, 0.5), 4
+    );
+    right->material = create_material();
+    right->material->color = create_color(0.5, 1, 0.1);
+    right->material->diffuse = 0.7;
+    right->material->specular = 0.3;
 
     // // Create Left Sphere
-    // t_object *left = create_object(SPHERE);
-    // left->transform = matrix_multiply(
-    //     translation(-1.5, 0.33, -0.75),
-    //     scaling(0.33, 0.33, 0.33), 4
-    // );
-    // left->material = create_material();
-    // left->material->color = create_color(1, 0.8, 0.1);
-    // left->material->diffuse = 0.7;
-    // left->material->specular = 0.3;
+    t_object *left = create_object(SPHERE);
+    left->transform = matrix_multiply(
+        translation(-1.5, 0.33, -0.75),
+        scaling(0.33, 0.33, 0.33), 4
+    );
+    left->material = create_material();
+    left->material->color = create_color(1, 0.8, 0.1);
+    left->material->diffuse = 0.7;
+    left->material->specular = 0.3;
 
     // // Add objects to the world
-    // t_list *objects = NULL;
-    // ft_lstadd_front(&objects, ft_lstnew(floor));
-    // // ft_lstadd_front(&objects, ft_lstnew(left_wall));
+    t_list *objects = NULL;
+    ft_lstadd_front(&objects, ft_lstnew(floor));
+    // ft_lstadd_front(&objects, ft_lstnew(left_wall));
     // // ft_lstadd_front(&objects, ft_lstnew(right_wall));
-    // ft_lstadd_front(&objects, ft_lstnew(middle));
-    // ft_lstadd_front(&objects, ft_lstnew(right));
-    // ft_lstadd_front(&objects, ft_lstnew(left));
-    // world->objects_list = objects;
+    ft_lstadd_front(&objects, ft_lstnew(middle));
+    ft_lstadd_front(&objects, ft_lstnew(right));
+    ft_lstadd_front(&objects, ft_lstnew(left));
+    world->objects_list = objects;
 
     // Render the scene
-    can = render(scene()->camera, scene(), mlx, win);
+    can = render(cam, world, mlx, win);
     mlx_put_image_to_window(mlx, win, can->img->img, 0, 0);
     printf("Rendering done\n");
+    // exit(1);
     mlx_loop(mlx);
 }
-
-
 
 bool is_shadowed(t_world *world, t_tuple *point)
 {
@@ -1916,7 +1931,7 @@ void print_map_data(void)
 
 int main(int ac, char **av)
 {
-    read_map_data(av[1]);
-    print_map_data();
+    // read_map_data(av[1]);
+    // print_map_data();
     render_scene();
 }
